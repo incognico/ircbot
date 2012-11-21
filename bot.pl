@@ -126,11 +126,11 @@ if ($ipv6) {
    $server = $profiles{$myprofile}{server6};
 
    if ($ssl) {
-      require IO::Socket::SSL 'inet6';
+      use IO::Socket::SSL 'inet6';
 
    }
    else {
-      require IO::Socket::INET6;
+      use IO::Socket::INET6;
    }
 }
 else {
@@ -138,10 +138,10 @@ else {
    $server = $profiles{$myprofile}{server4};
 
    if ($ssl) {
-      require IO::Socket::SSL;
+      use IO::Socket::SSL;
    }
    else {
-      require IO::Socket::INET;
+      use IO::Socket::INET;
    }
 }
 
