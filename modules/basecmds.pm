@@ -201,7 +201,7 @@ sub on_privmsg {
             if ($cargs[0] eq 'CHANNELS' || $cargs[0] eq 'CHANS') {
                my $chans;
 
-               for (keys($mychannels->{$$myprofile})) {
+               for (keys(%{$mychannels->{$$myprofile}})) {
                   $chans .= sprintf("%s, ", $_);
                }
 

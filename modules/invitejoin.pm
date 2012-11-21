@@ -1,5 +1,5 @@
 # TODO:
-# - Save less
+# - Save less :D
 # - Make even more complicated
 
 package invitejoin;
@@ -15,7 +15,6 @@ use YAML qw(LoadFile DumpFile);
 
 my $channels;
 my $myadmins;
-my $mychannels;
 my $myprofile;
 my $mytrigger;
 my $public;
@@ -37,7 +36,6 @@ sub new {
 
    $channels      = $self->{channels};
    $myadmins      = $self->{myadmins};
-   $mychannels    = $self->{mychannels};
    $myprofile     = $self->{myprofile};
    $mytrigger     = $self->{mytrigger};
    $public        = $self->{public};
@@ -52,7 +50,7 @@ sub new {
 sub autojoin {
    my $deleted = 0;
 
-   for (keys(%{$invitechannels{joinlist}{$$myprofile}})) {
+   for (keys($invitechannels{joinlist}{$$myprofile})) {
       unless (exists $invitechannels{blacklist}{$$myprofile}{$_} || exists $channels->{$$myprofile}{$_}) {
          utils->joinchan($_);
       }

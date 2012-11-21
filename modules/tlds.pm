@@ -5,7 +5,7 @@ use utf8;
 use strict;
 use warnings;
 
-use Crap;
+use Carp;
 
 my $mytrigger;
 my $silent;

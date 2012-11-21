@@ -246,6 +246,10 @@ while (my @raw = split(' ', <$socket>)) {
          callhook('on_umodeg', $who);
          # who
       }
+      when ('554') {
+         callhook('on_umodeg', substr($raw[4], 1), 1);
+         # nick, 1
+      }
       when ([qw(432 433 434)]) {
          callhook('on_nickinuse');
       }
@@ -683,9 +687,17 @@ sub on_quit {
 }
 
 sub on_umodeg {
-   my $who = shift || return;
+   my ($who, $isnickonly) = @_;
 
-   acceptadmins() if ($who ~~ @myadmins);
+   unless ($isnickonly) {
+      acceptadmins() if ($who ~~ @myadmins);
+   }
+   else {
+      my %uniq;
+
+      $uniq{(split('!', $_))[0]}++ for @myadmins;
+      acceptadmins() if (exists $uniq{$who});
+   }
 }
 
 exit 0;
