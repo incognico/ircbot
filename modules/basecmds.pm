@@ -82,7 +82,7 @@ sub on_privmsg {
                      utils->ack($target);
                   }
                }
-               unless ($args[1]) {
+               elsif (!$args[1]) {
                   utils->msg($target, sprintf("RAWLOG: %s", $$rawlog ? 'ON' : 'OFF'));
                }
                else {
@@ -100,7 +100,7 @@ sub on_privmsg {
                      utils->ack($target);
                   }
                }
-               unless ($args[1]) {
+               elsif (!$args[1]) {
                   utils->msg($target, sprintf("SILENT: %s", $$silent ? 'ON' : 'OFF'));
                }
                else {

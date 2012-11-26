@@ -26,9 +26,7 @@ sub new {
 sub ack {
    my ($self, $target) = @_;
 
-   if (exists $mychannels->{$$myprofile}{$target}) {
-      $self->msg($target, sprintf("done {::%s}", caller)) unless $$silent;
-   }
+   $self->msg($target, sprintf("done {::%s}", caller)) unless $$silent;
 }
 
 sub act {
@@ -105,23 +103,16 @@ sub kick {
 
 sub msg {
    my ($self, $target, $msg, $act) = @_;
-   my $allow = 1;
 
-   if (main::ischan($target)) {
-      $allow = 0 unless exists $mychannels->{$$myprofile}{$target};
-   }
-
-   if ($allow) {
-      for (split(/\n|(.{400})/, $msg)) {
-         unless ($act) {
-            main::raw('PRIVMSG %s :%s', $target, $_) if $_;
-         }
-         elsif ($act == 1) {
-            main::raw("PRIVMSG %s :\001ACTION %s\001", $target, $_) if $_;
-         }
-         elsif ($act == 2) {
-            main::raw('NOTICE %s :%s', $target, $_) if $_;
-         }
+   for (split(/\n|(.{400})/, $msg)) {
+      unless ($act) {
+         main::raw('PRIVMSG %s :%s', $target, $_) if $_;
+      }
+      elsif ($act == 1) {
+         main::raw("PRIVMSG %s :\001ACTION %s\001", $target, $_) if $_;
+      }
+      elsif ($act == 2) {
+         main::raw('NOTICE %s :%s', $target, $_) if $_;
       }
    }
 }
