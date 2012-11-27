@@ -14,7 +14,6 @@ use warnings;
 use YAML qw(LoadFile DumpFile);
 
 my $channels;
-my $myadmins;
 my $myprofile;
 my $mytrigger;
 my $public;
@@ -35,7 +34,6 @@ sub new {
    my $self = bless(\%self, $package);
 
    $channels      = $self->{channels};
-   $myadmins      = $self->{myadmins};
    $myprofile     = $self->{myprofile};
    $mytrigger     = $self->{mytrigger};
    $public        = $self->{public};
@@ -50,7 +48,7 @@ sub new {
 sub autojoin {
    my $deleted = 0;
 
-   for (keys($invitechannels{joinlist}{$$myprofile})) {
+   for (keys(%{$invitechannels{joinlist}{$$myprofile}})) {
       unless (exists $invitechannels{blacklist}{$$myprofile}{$_} || exists $channels->{$$myprofile}{$_}) {
          utils->joinchan($_);
       }
@@ -87,7 +85,7 @@ sub on_invite {
 
    printf("[%s] *** Invited to %s by %s\n", scalar localtime, $chan, $nick);
 
-   if ($who ~~ @$myadmins) {
+   if (main::isadmin($who)) {
       utils->joinchan($chan);
       $channels->{$$myprofile}{$chan} = '';
       $joined = 1;
@@ -135,7 +133,7 @@ sub on_privmsg {
       shift(@args);
 
       # admin cmds
-      return unless ($who ~~ @$myadmins);
+      return unless main::isadmin($who);
 
       $target = $nick unless $ischan;
 
@@ -154,7 +152,7 @@ sub on_privmsg {
                      utils->ack($target);
                   }
                }
-               unless ($args[1]) {
+               elsif (!$args[1]) {
                   utils->msg($target, sprintf("PUBLIC: %s", $$public ? 'ON' : 'OFF'));
                }
                else {
@@ -180,7 +178,7 @@ sub on_privmsg {
                         $chans .= sprintf("%s (%s), ", $_, $invitechannels{joinlist}{$$myprofile}{$_});
                      }
                   }
-                  unless ($args[1]) {
+                  elsif (!$args[1]) {
                      for (keys($invitechannels{joinlist}{$$myprofile})) {
                         $chans .= sprintf("%s, ", $_);
                      }
@@ -285,7 +283,7 @@ sub on_privmsg {
                utils->hlp($target, $_) for (@syntax);
             }
          }
-         unless ($args[0]) {
+         elsif (!$args[0]) {
             utils->err($target, $_) for (@syntax);
          }
       }

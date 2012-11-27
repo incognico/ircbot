@@ -9,7 +9,6 @@ use warnings;
 
 my $channels;
 my $logtodb;
-my $myadmins;
 my $mychannels;
 my $myhelptext;
 my $mynick;
@@ -26,7 +25,6 @@ sub new {
 
    $channels      = $self->{channels};
    $logtodb       = $self->{logtodb};
-   $myadmins      = $self->{myadmins};
    $mychannels    = $self->{mychannels};
    $myhelptext    = $self->{myhelptext};
    $myprofile     = $self->{myprofile};
@@ -65,7 +63,7 @@ sub on_privmsg {
       }
 
       # admin cmds
-      return unless ($who ~~ @$myadmins);
+      return unless main::isadmin($who);
 
       if ($cmd eq 'SET' || $cmd eq 'S') {
          my $syntax = 'syntax: SET RAWLOG|SILENT [ON|OFF]';

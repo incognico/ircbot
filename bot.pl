@@ -1,10 +1,10 @@
 #!/usr/bin/env perl
 
 # TODO:
+# - Reduce complexity (rewrite this piece of crap lol)
 # - Track usermodes
-# - Use Crap in modules
+# - Use Carp in modules
 # - Fix require utils in modules
-# - Reduce complexity (ugh, rewrite this piece of crap)
 
 # ./bot.pl -p <profile name>
 # 
@@ -31,13 +31,13 @@ my $myprofile; # -p overrides
 # settings (defaults)
 my $rawlog       = 0;
 my $silent       = 0; 
-my $logtodb      = 0;
 my $public       = 1;
 my $rejoinonkick = 1;
 my $useoident    = 1;
 my $mytrigger    = '!';
 my $myaddr4      = '127.0.0.1';
 my $myaddr6      = '::1';
+my $adminpass    = 'secret';
 my @myadmins     = qw(nico!nico@lifeisabug.com other!mask@of.some.admin);
 my @mymodules    = qw(utils basecmds invitejoin tlds);
 my $myhelptext   = 'Help yourself.';
@@ -57,6 +57,7 @@ my %profiles = (
       nick              => 'IamAbot',
       pass              => 'secret',
       umode             => '+gp',
+      public            => 0,
    },
    yiff => {
       server4           => 'irc.example.com'
@@ -68,6 +69,7 @@ my %profiles = (
       helptext          => '',
       silent            => 1,
       admins            => [qw(the!yiff@admin.only)],
+      adminpass         => 'specialsecret',
       modules           => [qw(utils basecmds yiff)],
    },
 );
@@ -101,10 +103,10 @@ my $ssl               = $profiles{$myprofile}{ssl}         || 0;
 my $auth              = $profiles{$myprofile}{auth}        || 0;
 my @mychantypes       = defined @{$profiles{$myprofile}{chantypes}} ? @{$profiles{$myprofile}{chantypes}} : qw(#);
 
-$logtodb      = $profiles{$myprofile}{logtodb}      if defined $profiles{$myprofile}{logtodb};
 $myaddr4      = $profiles{$myprofile}{addr4}        if defined $profiles{$myprofile}{addr4};
 $myaddr6      = $profiles{$myprofile}{addr6}        if defined $profiles{$myprofile}{addr6};
 @myadmins     = @{$profiles{$myprofile}{admins}}    if defined @{$profiles{$myprofile}{admins}};
+$myadminpass  = $profiles{$myprofile}{adminpass}    if defined $profiles{$myprofile}{adminpass};
 $myhelptext   = $profiles{$myprofile}{helptext}     if defined $profiles{$myprofile}{helptext};
 @mymodules    = @{$profiles{$myprofile}{modules}}   if defined @{$profiles{$myprofile}{modules}};
 $mytrigger    = $profiles{$myprofile}{trigger}      if defined $profiles{$myprofile}{trigger};
@@ -112,7 +114,8 @@ $public       = $profiles{$myprofile}{public}       if defined $profiles{$myprof
 $rawlog       = $profiles{$myprofile}{rawlog}       if defined $profiles{$myprofile}{rawlog};
 $rejoinonkick = $profiles{$myprofile}{rejoinonkick} if defined $profiles{$myprofile}{rejoinonkick};
 $silent       = $profiles{$myprofile}{silent}       if defined $profiles{$myprofile}{silent};
-$useoident    = $profiles{$myprofile}{useoident}    if defined $profiles{$myprofile}{useoident};
+
+my %authedadmins;
 
 my %mychannels;
 my %myumodes;
@@ -242,13 +245,12 @@ while (my @raw = split(' ', <$socket>)) {
          }
       }
       when ('718') {
-         (my $who = $raw[3]) =~ y/[]/!/d;
-         callhook('on_umodeg', $who);
-         # who
+         callhook('on_umodeg', (split(/\[/, $raw[3]))[0]);
+         # nick
       }
       when ('554') {
-         callhook('on_umodeg', substr($raw[4], 1), 1);
-         # nick, 1
+         callhook('on_umodeg', substr($raw[4], 1));
+         # nick
       }
       when ([qw(432 433 434)]) {
          callhook('on_nickinuse');
@@ -269,11 +271,15 @@ sub acceptadmins {
    my %uniq;
 
    $uniq{(split('!', $_))[0]}++ for @myadmins;
+   acceptuser($_) for (keys(%uniq));
+}
 
-   for (keys(%uniq)) {
-      raw('ACCEPT %s', $_);
-      printf("[%s] *** Accepted %s\n", scalar localtime, $_) unless $rawlog;
-   }
+sub acceptuser {
+   my $nick = shift || return;
+
+   raw('ACCEPT %s', $nick);
+   raw('ACCEPT +%s', $nick);
+   printf("[%s] *** Accepted %s\n", scalar localtime, $nick) unless $rawlog;
 }
 
 sub authenticate {
@@ -353,7 +359,6 @@ sub loadmodules {
                unless ($@) {
                   $modules{$_} = $_->new(
                      channels      => \%channels,
-                     logtodb       => \$logtodb,
                      myadmins      => \@myadmins,
                      mychannels    => \%mychannels,
                      myhelptext    => \$myhelptext,
@@ -367,7 +372,7 @@ sub loadmodules {
                }
                else {
                   chomp $@;
-                  crap("$@");
+                  carp("$@");
                   printf("[%s] === Failed to load module [%s]\n", scalar localtime, $_);
                   utils->err($target, sprintf("[%s] was not loaded due to an unhandled exception, check log", $_)) if ($target && utils->can('err'));
                }
@@ -386,6 +391,17 @@ sub loadmodules {
           printf("[%s] === Failed to load already loaded module [%s]\n", scalar localtime, $_);
           utils->err($target, sprintf("[%s] was not loaded because it is already loaded", $_)) if ($target && utils->can('err'));
       }
+   }
+}
+
+sub isadmin {
+   my $who = shift || return;
+
+   if ($authedadmins{$who}) {
+      return 1;
+   }
+   else {
+      return 0;
    }
 }
 
@@ -597,8 +613,28 @@ sub on_privmsg {
 
       $target = $nick unless $ischan;
 
+      if ($who ~~ @myadmins) {
+         if ($cmd eq 'AUTH') {
+            if ($args[0]) {
+               if ($args[0] eq $myadminpass) {
+                  unless ($authedadmins{$who}) {
+                     $authedadmins{$who}++;
+                     printf("[%s] *** Admin [%s] successfully authenticated\n", scalar localtime, $who);
+                     utils->msg($nick, sprintf('Successfully authenticated [%s]', $who)) if utils->can('msg');
+                  }
+                  else {
+                     utils->msg($nick, sprintf('Already authenticated [%s]', $who)) if utils->can('msg');
+                  }
+               }
+               else {
+                  utils->msg($nick, sprintf('Wrong password for [%s]', $who)) if utils->can('msg');
+               }
+            }
+         }
+      }
+
       # admin cmds
-      return unless ($who ~~ @myadmins);
+      return unless isadmin($who);
 
       if ($cmd eq 'MODULE' || $cmd eq 'MOD') {
          my @syntax = ('syntax: MODULE(MOD) LIST(LS)', 'syntax: MODULE(MOD) LOAD(LO)|UNLOAD(UL)|RELOAD(RL) ALL|<name> [<name>]...');
@@ -687,17 +723,11 @@ sub on_quit {
 }
 
 sub on_umodeg {
-   my ($who, $isnickonly) = @_;
+   my $nick = shift || return;
+   my %uniq;
 
-   unless ($isnickonly) {
-      acceptadmins() if ($who ~~ @myadmins);
-   }
-   else {
-      my %uniq;
-
-      $uniq{(split('!', $_))[0]}++ for @myadmins;
-      acceptadmins() if (exists $uniq{$who});
-   }
+   $uniq{(split('!', $_))[0]}++ for @myadmins;
+   acceptuser($uniq{$nick}) if (exists $uniq{$nick});
 }
 
 exit 0;

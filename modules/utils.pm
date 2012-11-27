@@ -91,7 +91,11 @@ sub kick {
 
    $uniq{(split('!', $_))[0]}++ for @$myadmins;
 
-   return if (exists $uniq{$victim});
+   if (exists $uniq{$victim}) {
+      printf("[%s] === modules::%s: Refusing to kick admin [%s] on %s\n", scalar localtime, __PACKAGE__, $victim, $chan);
+
+      return;
+   }
 
    if ($reason) {
       main::raw('KICK %s %s :%s', $chan, $victim, $reason) if exists $mychannels->{$$myprofile}{$chan};
