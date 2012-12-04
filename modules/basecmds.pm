@@ -9,6 +9,7 @@ use warnings;
 
 my $channels;
 my $logtodb;
+my $myadmins;
 my $mychannels;
 my $myhelptext;
 my $mynick;
@@ -25,6 +26,7 @@ sub new {
 
    $channels      = $self->{channels};
    $logtodb       = $self->{logtodb};
+   $myadmins      = $self->{myadmins};
    $mychannels    = $self->{mychannels};
    $myhelptext    = $self->{myhelptext};
    $myprofile     = $self->{myprofile};

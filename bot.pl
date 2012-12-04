@@ -620,14 +620,14 @@ sub on_privmsg {
                   unless ($authedadmins{$who}) {
                      $authedadmins{$who}++;
                      printf("[%s] *** Admin [%s] successfully authenticated\n", scalar localtime, $who);
-                     utils->msg($nick, sprintf('Successfully authenticated [%s]', $who)) if utils->can('msg');
+                     utils->msg($nick, sprintf('Successfully authenticated [%s]', $who), 2) if utils->can('msg');
                   }
                   else {
-                     utils->msg($nick, sprintf('Already authenticated [%s]', $who)) if utils->can('msg');
+                     utils->msg($nick, sprintf('Already authenticated [%s]', $who), 2) if utils->can('msg');
                   }
                }
                else {
-                  utils->msg($nick, sprintf('Wrong password for [%s]', $who)) if utils->can('msg');
+                  utils->msg($nick, sprintf('Wrong password for [%s]', $who), 2) if utils->can('msg');
                }
             }
          }
