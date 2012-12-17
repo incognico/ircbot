@@ -85,7 +85,10 @@ sub on_invite {
 
    printf("[%s] *** Invited to %s by %s\n", scalar localtime, $chan, $nick);
 
-   if (main::isadmin($who)) {
+   if (exists $channels->{$$myprofile}{$chan}) {
+      utils->joinchan($chan);
+   }
+   elsif (main::isadmin($who)) {
       utils->joinchan($chan);
       $channels->{$$myprofile}{$chan} = '';
       $joined = 1;
@@ -178,14 +181,14 @@ sub on_privmsg {
                         $chans .= sprintf("%s (%s), ", $_, $invitechannels{joinlist}{$$myprofile}{$_});
                      }
                   }
-                  elsif (!$args[1]) {
-                     for (keys($invitechannels{joinlist}{$$myprofile})) {
-                        $chans .= sprintf("%s, ", $_);
-                     }
+               }
+               elsif (!$args[1]) {
+                  for (keys($invitechannels{joinlist}{$$myprofile})) {
+                     $chans .= sprintf("%s, ", $_);
                   }
-                  else {
-                     utils->err($target, 'syntax: LIST(LS) INVITECHANNELS(INVCHANS) [VERBOSE(V)]');
-                  }
+               }
+               else {
+                  utils->err($target, 'syntax: LIST(LS) INVITECHANNELS(INVCHANS) [VERBOSE(V)]');
                }
 
                if ($chans) {
