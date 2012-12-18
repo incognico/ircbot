@@ -67,7 +67,7 @@ sub on_privmsg {
       # admin cmds
       return unless main::isadmin($who);
 
-      if ($cmd eq 'SET' || $cmd eq 'S') {
+      if ($cmd eq 'SET') {
          my $syntax = 'syntax: SET RAWLOG|SILENT [ON|OFF]';
 
          if ($args[0]) {
@@ -149,7 +149,7 @@ sub on_privmsg {
             utils->err($target, 'syntax: SHELL <command>');
          }
       }
-      elsif ($cmd eq 'JOIN' || $cmd eq 'J') {
+      elsif ($cmd eq 'JOIN') {
          if ($args[0]) {
             my $joined = 0;
 
@@ -167,10 +167,10 @@ sub on_privmsg {
             utils->ack($target) if $joined;
          }
          else {
-            utils->err($target, 'syntax: JOIN(J) <channel>');
+            utils->err($target, 'syntax: JOIN <channel>');
          }
       }
-      elsif ($cmd eq 'PART' || $cmd eq 'P') {
+      elsif ($cmd eq 'PART') {
          if ($args[0]) {
             my $parted = 0;
 
@@ -192,7 +192,7 @@ sub on_privmsg {
                utils->partchan($target);
             }
             else {
-               utils->err($target, 'syntax: PART(P) <channel> [,<channel>]...');
+               utils->err($target, 'syntax: PART <channel> [,<channel>]...');
             }
          }
       }
@@ -223,31 +223,31 @@ sub on_privmsg {
             utils->err($target, 'syntax: LIST(LS) CHANNELS(CHANS)');
          }
       }
-      elsif ($cmd eq 'MSG' || $cmd eq 'M') {
+      elsif ($cmd eq 'MSG') {
          if ($args[1]) {
             utils->msg($args[0], join(' ', @args[1..$#args]));
             utils->ack($target) unless $args[0] eq $target;
          }
          else {
-            utils->err($target, 'syntax: MSG(M) <target> <text>');
+            utils->err($target, 'syntax: MSG <target> <text>');
          }
       }
-      elsif ($cmd eq 'ACT' || $cmd eq 'A') {
+      elsif ($cmd eq 'ACT') {
          if ($args[1]) {
             utils->msg($args[0], join(' ', @args[1..$#args]), 1);
             utils->ack($target) unless $args[0] eq $target;
          }
          else {
-            utils->err($target, 'syntax: ACT(A) <target> <text>');
+            utils->err($target, 'syntax: ACT <target> <text>');
          }
       }
-      elsif ($cmd eq 'NOTICE' || $cmd eq 'N') {
+      elsif ($cmd eq 'NOTICE') {
          if ($args[1]) {
             utils->msg($args[0], join(' ', @args[1..$#args]), 2);
             utils->ack($target) unless $args[0] eq $target;
          }
          else {
-            utils->err($target, 'syntax: NOTICE(N) <target> <text>');
+            utils->err($target, 'syntax: NOTICE <target> <text>');
          }
       }
       elsif ($cmd eq 'ACK') {

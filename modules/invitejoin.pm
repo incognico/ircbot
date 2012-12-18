@@ -140,7 +140,7 @@ sub on_privmsg {
 
       $target = $nick unless $ischan;
 
-      if ($cmd eq 'SET' || $cmd eq 'S') {
+      if ($cmd eq 'SET') {
          my $syntax = 'syntax: SET PUBLIC [ON|OFF]';
 
          if ($args[0]) {

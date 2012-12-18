@@ -175,7 +175,7 @@ if ($useoident) {
 my $socket = ($ssl ? 'IO::Socket::SSL' : ($ipv6 ? 'IO::Socket::INET6' : 'IO::Socket::INET'))->new(
    LocalAddr => $myaddr,
    PeerAddr  => $server,
-   PeerPort  => $port
+   PeerPort  => $port,
 ) or croak $!;
 
 raw('NICK %s', $mynick);
@@ -637,7 +637,7 @@ sub on_privmsg {
       return unless isadmin($who);
 
       if ($cmd eq 'MODULE' || $cmd eq 'MOD') {
-         my @syntax = ('syntax: MODULE(MOD) LIST(LS)', 'syntax: MODULE(MOD) LOAD(LO)|UNLOAD(UL)|RELOAD(RL) ALL|<name> [<name>]...');
+         my @syntax = ('syntax: MODULE(MOD) LIST(LS)', 'syntax: MODULE(MOD) LOAD(L)|UNLOAD(U)|RELOAD(R) ALL|<name> [<name>]...');
 
          if ($args[0]) {
             if ($cargs[0] eq 'LIST' || $cargs[0] eq 'LS') {
@@ -654,7 +654,7 @@ sub on_privmsg {
                #   utils->msg($target, "no modules loaded") if utils->can('msg');
                #}
             }
-            elsif ($cargs[0] eq 'LOAD' || $cargs[0] eq 'LO') {
+            elsif ($cargs[0] eq 'LOAD' || $cargs[0] eq 'L') {
                if ($args[1]) {
                   my @toload = @args[1..$#args];
 
@@ -662,10 +662,10 @@ sub on_privmsg {
                   utils->ack($target) if utils->can('ack');
                }
                else {
-                  utils->err($target, 'syntax: MODULE(MOD) LOAD(LO) ALL|<name> [<name>]...') if utils->can('err');
+                  utils->err($target, 'syntax: MODULE(MOD) LOAD(L) ALL|<name> [<name>]...') if utils->can('err');
                }
             }
-            elsif ($cargs[0] eq 'UNLOAD' || $cargs[0] eq 'UL') {
+            elsif ($cargs[0] eq 'UNLOAD' || $cargs[0] eq 'U') {
                if ($args[1]) {
                   my @toreload = @args[1..$#args];
 
@@ -673,10 +673,10 @@ sub on_privmsg {
                   utils->ack($target) if utils->can('ack');
                }
                else {
-                  utils->err($target, 'syntax: MODULE(MOD) UNLOAD(UL) ALL|<name> [<name>]...') if utils->can('err');
+                  utils->err($target, 'syntax: MODULE(MOD) UNLOAD(U) ALL|<name> [<name>]...') if utils->can('err');
                }
             }
-            elsif ($cargs[0] eq 'RELOAD' || $cargs[0] eq 'RL') {
+            elsif ($cargs[0] eq 'RELOAD' || $cargs[0] eq 'R') {
                if ($args[1]) {
                   if ($cargs[1] eq 'ALL') {
                      my @toreload;
@@ -698,7 +698,7 @@ sub on_privmsg {
                   }
                }
                else {
-                  utils->err($target, 'syntax: MODULE(MOD) RELOAD(RL) ALL|<name> [<name>]...') if utils->can('err');
+                  utils->err($target, 'syntax: MODULE(MOD) RELOAD(R) ALL|<name> [<name>]...') if utils->can('err');
                }
             }
             elsif ($cargs[0] eq 'HELP') {
