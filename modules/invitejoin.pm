@@ -214,7 +214,24 @@ sub on_privmsg {
          my @syntax = ('syntax: BLACKLIST(BL) LIST(LS)', 'syntax: BLACKLIST(BL) ADD|DELETE(DEL)|CHECK(CHK) <channel> [,<channel>]...');
 
          if ($args[0]) {
-            if ($cargs[0] eq 'ADD') {
+            if ($cargs[0] eq 'LIST' || $cargs[0] eq 'LS') {
+               my $chans;
+               my $count = 0;
+
+               for (keys($invitechannels{blacklist}{$$myprofile})) {
+                  $count++;
+                  $chans .= sprintf("%s, ", $_);
+               }
+
+               if ($chans) {
+                  utils->msg($target, substr($chans, 0, -2));
+                  utils->msg($target, sprintf('total: %s', $count));
+               }
+               else {
+                  utils->msg($target, "no channels blacklisted");
+               }
+            }
+            elsif ($cargs[0] eq 'ADD') {
                if ($args[1]) {
                   my $added = 0;
 
