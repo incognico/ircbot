@@ -200,13 +200,16 @@ sub on_privmsg {
          if ($args[0]) {
             if ($cargs[0] eq 'CHANNELS' || $cargs[0] eq 'CHANS') {
                my $chans;
+               my $count = 0;
 
                for (keys(%{$mychannels->{$$myprofile}})) {
+                  $count++;
                   $chans .= sprintf("%s, ", $_);
                }
 
                if ($chans) {
                   utils->msg($target, substr($chans, 0, -2));
+                  utils->msg($target, sprintf('total: %s', $count));
                }
                else {
                   utils->msg($target, "no channels joined");

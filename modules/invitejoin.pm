@@ -174,16 +174,19 @@ sub on_privmsg {
          if ($args[0]) {
             if ($cargs[0] eq 'INVITECHANNELS' || $cargs[0] eq 'INVCHANS') {
                my $chans;
+               my $count = 0;
 
                if ($args[1]) {
                   if ($cargs[1] eq 'VERBOSE' || $cargs[1] eq 'V') {
                      for (keys($invitechannels{joinlist}{$$myprofile})) {
-                        $chans .= sprintf("%s (%s), ", $_, $invitechannels{joinlist}{$$myprofile}{$_});
+                        $count++;
+                        $chans .= sprintf("%s (%s)\n", $_, $invitechannels{joinlist}{$$myprofile}{$_});
                      }
                   }
                }
                elsif (!$args[1]) {
                   for (keys($invitechannels{joinlist}{$$myprofile})) {
+                     $count++;
                      $chans .= sprintf("%s, ", $_);
                   }
                }
@@ -193,6 +196,7 @@ sub on_privmsg {
 
                if ($chans) {
                   utils->msg($target, substr($chans, 0, -2));
+                  utils->msg($target, sprintf('total: %s', $count));
                }
                else {
                   utils->msg($target, "no invite-channels joined");
