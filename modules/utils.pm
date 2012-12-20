@@ -39,7 +39,7 @@ sub act {
    my ($self, $target) = (shift, shift);
    my $act = sprintf(shift, @_);
 
-   for (split(/\n|(.{400})/, $act)) {
+   for (split(/\n|(.{$splitlen})/, $act)) {
       main::raw("PRIVMSG %s :\001ACTION %s\001", $target, $_) if $_;
    }
 }
@@ -103,7 +103,7 @@ sub msg {
    my ($self, $target) = (shift, shift);
    my $msg = sprintf(shift, @_);
 
-   for (split(/\n|(.{400})/, $msg)) {
+   for (split(/\n|(.{$splitlen})/, $msg)) {
       main::raw('PRIVMSG %s :%s', $target, $_) if $_;
    }
 }
