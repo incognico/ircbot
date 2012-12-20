@@ -9,6 +9,12 @@ my $mychannels;
 my $myprofile;
 my $silent;
 
+### start config ###
+
+my $splitlen = 400;
+
+### end config ###
+
 ### functions
 
 sub new {
@@ -26,21 +32,15 @@ sub new {
 sub ack {
    my ($self, $target) = @_;
 
-   $self->msg($target, sprintf("done {::%s}", caller)) unless $$silent;
+   $self->msg($target, 'done {::%s}', caller) unless $$silent;
 }
 
 sub act {
-   my ($self, $target, $msg) = @_;
-   my $allow = 1;
+   my ($self, $target) = (shift, shift);
+   my $act = sprintf(shift, @_);
 
-   if (main::ischan($target)) {
-      $allow = 0 unless exists $mychannels->{$$myprofile}{$target};
-   }
-
-   if ($allow) {
-      for (split(/\n|(.{400})/, $msg)) {
-         main::raw("PRIVMSG %s :\001ACTION %s\001", $target, $_) if $_;
-      }
+   for (split(/\n|(.{400})/, $act)) {
+      main::raw("PRIVMSG %s :\001ACTION %s\001", $target, $_) if $_;
    }
 }
 
@@ -56,20 +56,14 @@ sub chantrim {
 
 sub err {
    my ($self, $target, $string) = @_;
-
-   if ($string) {
-      $self->msg($target, sprintf("error: %s {::%s}", $string, caller(0))) unless $$silent;
-   }
-   else {
-      $self->msg($target, sprintf("error {::%s}", caller(0))) unless $$silent;
-   }
+   
+   $self->msg($target, 'error: %s {::%s}', $string, caller(0)) unless $$silent;
 }
-
 
 sub hlp {
    my ($self, $target, $string) = @_;
 
-   $self->msg($target, sprintf("help: %s {::%s}", $string, caller(0))) unless $$silent;
+   $self->msg($target, 'help: %s {::%s}', $string, caller(0)) unless $$silent;
 }
 
 sub joinchan {
@@ -106,18 +100,20 @@ sub kick {
 }
 
 sub msg {
-   my ($self, $target, $msg, $act) = @_;
+   my ($self, $target) = (shift, shift);
+   my $msg = sprintf(shift, @_);
 
    for (split(/\n|(.{400})/, $msg)) {
-      unless ($act) {
-         main::raw('PRIVMSG %s :%s', $target, $_) if $_;
-      }
-      elsif ($act == 1) {
-         main::raw("PRIVMSG %s :\001ACTION %s\001", $target, $_) if $_;
-      }
-      elsif ($act == 2) {
-         main::raw('NOTICE %s :%s', $target, $_) if $_;
-      }
+      main::raw('PRIVMSG %s :%s', $target, $_) if $_;
+   }
+}
+
+sub ntc {
+   my ($self, $target) = (shift, shift);
+   my $ntc = sprintf(shift, @_);
+
+   for (split(/\n|(.{$splitlen})/, $ntc)) {
+      main::raw('NOTICE %s :%s', $target, $_) if $_;
    }
 }
 

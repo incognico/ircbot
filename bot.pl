@@ -537,8 +537,10 @@ sub on_nick {
    }
 
    for (keys(%{$mychannels{$myprofile}})) {
-      delete $mychannels{$myprofile}{$_}{$oldnick};
-      $mychannels{$myprofile}{$_}{$newnick}++;
+      if (exists $mychannels{$myprofile}{$_}{$oldnick}) {
+         delete $mychannels{$myprofile}{$_}{$oldnick};
+         $mychannels{$myprofile}{$_}{$newnick}++;
+      }
    }
 }
 
@@ -620,14 +622,14 @@ sub on_privmsg {
                   unless ($authedadmins{$who}) {
                      $authedadmins{$who}++;
                      printf("[%s] *** Admin [%s] successfully authenticated\n", scalar localtime, $who);
-                     utils->msg($nick, sprintf('Successfully authenticated [%s]', $who), 2) if utils->can('msg');
+                     utils->ntc($nick, 'Successfully authenticated [%s]', $who) if utils->can('ntc');
                   }
                   else {
-                     utils->msg($nick, sprintf('Already authenticated [%s]', $who), 2) if utils->can('msg');
+                     utils->ntc($nick, 'Already authenticated [%s]', $who) if utils->can('ntc');
                   }
                }
                else {
-                  utils->msg($nick, sprintf('Wrong password for [%s]', $who), 2) if utils->can('msg');
+                  utils->ntc($nick, 'Wrong password for [%s]', $who) if utils->can('ntc');
                }
             }
          }
@@ -651,7 +653,7 @@ sub on_privmsg {
                   utils->msg($target, substr($tolist, 0, -2)) if utils->can('msg');
                }
                #else {
-               #   utils->msg($target, "no modules loaded") if utils->can('msg');
+               #   utils->msg($target, 'no modules loaded') if utils->can('msg');
                #}
             }
             elsif ($cargs[0] eq 'LOAD' || $cargs[0] eq 'L') {

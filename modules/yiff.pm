@@ -61,7 +61,7 @@ sub on_join {
       my $r = rand(1);
 
       if ($r <= $percentage) {
-         utils->msg($chan, $yiff, 1);
+         utils->act($chan, $yiff);
          printf("[%s] === modules::%s: Yiffed [%s] on %s\n", scalar localtime, __PACKAGE__, $nick, $chan) unless $$rawlog;
       }
    }

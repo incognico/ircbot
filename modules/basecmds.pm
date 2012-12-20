@@ -57,10 +57,10 @@ sub on_privmsg {
       }
       elsif ($cmd eq 'SPAST') {
          if ($args[0]) {
-            utils->msg($target, sprintf("http://spa.st/%s", $args[0]));
+            utils->msg($target, 'http://spa.st/%s', $args[0]);
          }
          else {
-            utils->msg($target, sprintf("http://spa.st/%s", $nick));
+            utils->msg($target, 'http://spa.st/%s', $nick);
          }
       }
 
@@ -83,7 +83,7 @@ sub on_privmsg {
                   }
                }
                elsif (!$args[1]) {
-                  utils->msg($target, sprintf("RAWLOG: %s", $$rawlog ? 'ON' : 'OFF'));
+                  utils->msg($target, 'RAWLOG: %s', $$rawlog ? 'ON' : 'OFF');
                }
                else {
                   utils->err($target, 'syntax: SET RAWLOG [ON|OFF]');
@@ -101,7 +101,7 @@ sub on_privmsg {
                   }
                }
                elsif (!$args[1]) {
-                  utils->msg($target, sprintf("SILENT: %s", $$silent ? 'ON' : 'OFF'));
+                  utils->msg($target, 'SILENT: %s', $$silent ? 'ON' : 'OFF');
                }
                else {
                   utils->err($target, 'syntax: SET SILENT [ON|OFF]');
@@ -142,7 +142,7 @@ sub on_privmsg {
             }
 
             if ($? >> 8 != 0) {
-               utils->err($target, sprintf("returned: %s", $? >> 8));
+               utils->err($target, 'returned: %s', $? >> 8);
             }
          }
          else {
@@ -160,7 +160,7 @@ sub on_privmsg {
                   $joined = 1;
                }
                else {
-                  utils->err($target, sprintf("%s is not a valid channel", $_));
+                  utils->err($target, '%s is not a valid channel', $_);
                }
             }
 
@@ -181,7 +181,7 @@ sub on_privmsg {
                   $parted = 1;
                }
                else {
-                  utils->err($target, sprintf("%s is not a valid channel", $_));
+                  utils->err($target, '%s is not a valid channel', $_);
                }
             }
 
@@ -209,10 +209,10 @@ sub on_privmsg {
 
                if ($chans) {
                   utils->msg($target, substr($chans, 0, -2));
-                  utils->msg($target, sprintf('total: %s', $count));
+                  utils->msg($target, 'total: %s', $count);
                }
                else {
-                  utils->msg($target, "no channels joined");
+                  utils->msg($target, 'no channels joined');
                }
             }
             elsif ($cargs[0] eq 'HELP') {
@@ -234,7 +234,7 @@ sub on_privmsg {
       }
       elsif ($cmd eq 'ACT') {
          if ($args[1]) {
-            utils->msg($args[0], join(' ', @args[1..$#args]), 1);
+            utils->act($args[0], join(' ', @args[1..$#args]));
             utils->ack($target) unless $args[0] eq $target;
          }
          else {
@@ -243,7 +243,7 @@ sub on_privmsg {
       }
       elsif ($cmd eq 'NOTICE') {
          if ($args[1]) {
-            utils->msg($args[0], join(' ', @args[1..$#args]), 2);
+            utils->ntc($args[0], join(' ', @args[1..$#args]));
             utils->ack($target) unless $args[0] eq $target;
          }
          else {

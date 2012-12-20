@@ -156,7 +156,7 @@ sub on_privmsg {
                   }
                }
                elsif (!$args[1]) {
-                  utils->msg($target, sprintf("PUBLIC: %s", $$public ? 'ON' : 'OFF'));
+                  utils->msg($target, 'PUBLIC: %s', $$public ? 'ON' : 'OFF');
                }
                else {
                   utils->err($target, 'syntax: SET PUBLIC [ON|OFF]');
@@ -196,7 +196,7 @@ sub on_privmsg {
 
                if ($chans) {
                   utils->msg($target, substr($chans, 0, -2));
-                  utils->msg($target, sprintf('total: %s', $count));
+                  utils->msg($target, 'total: %s', $count);
                }
                else {
                   utils->msg($target, "no invite-channels joined");
@@ -225,7 +225,7 @@ sub on_privmsg {
 
                if ($chans) {
                   utils->msg($target, substr($chans, 0, -2));
-                  utils->msg($target, sprintf('total: %s', $count));
+                  utils->msg($target, 'total: %s', $count);
                }
                else {
                   utils->msg($target, "no channels blacklisted");
@@ -243,7 +243,7 @@ sub on_privmsg {
                         $added = 1;
                      }
                      else {
-                        utils->err($target, sprintf("%s is not a valid channel", $_));
+                        utils->err($target, '%s is not a valid channel', $_);
                      }
                   }
 
@@ -267,11 +267,11 @@ sub on_privmsg {
                            $deleted = 1;
                         }
                         else {
-                           utils->err($target, sprintf("%s is not blacklisted", $_));
+                           utils->err($target, '%s is not blacklisted', $_);
                         }
                      }
                      else {
-                        utils->err($target, sprintf("%s is not a valid channel", $_));
+                        utils->err($target, '%s is not a valid channel', $_);
                      }
                   }
 
@@ -293,7 +293,7 @@ sub on_privmsg {
                   }
 
                   if ($blacklisted) {
-                     utils->msg($target, sprintf("blacklisted: %s", substr($blacklisted, 0, -2)));
+                     utils->msg($target, 'blacklisted: %s', substr($blacklisted, 0, -2));
                   }
                   else {
                      utils->msg($target, "channel(s) not blacklisted");

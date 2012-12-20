@@ -8,7 +8,6 @@ use warnings;
 use Carp;
 
 my $mytrigger;
-my $silent;
 
 my %tlds;
 
@@ -36,7 +35,6 @@ sub new {
    my $self = bless(\%self, $package);
 
    $mytrigger     = $self->{mytrigger};
-   $silent        = $self->{silent};
 
    return $self;
 }
@@ -58,7 +56,7 @@ sub on_privmsg {
             my $tld = lc((substr($args[0], 0, 1) eq '.') ? substr($args[0], 1) : $args[0]);
 
             if (exists $tlds{$tld}) {
-               utils->msg($target, sprintf(".%s: %s", $tld, $tlds{$tld}));
+               utils->msg($target, '.%s: %s', $tld, $tlds{$tld});
             }
             else {
                utils->err($target, 'not found');
