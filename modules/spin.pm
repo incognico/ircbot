@@ -8,7 +8,6 @@ use warnings;
 my $mychannels;
 my $myprofile;
 my $mytrigger;
-my $rawlog;
 
 ### functions
 
@@ -19,7 +18,6 @@ sub new {
    $mychannels = $self->{mychannels};
    $myprofile  = $self->{myprofile};
    $mytrigger  = $self->{mytrigger};
-   $rawlog     = $self->{rawlog};
 
    return $self;
 }

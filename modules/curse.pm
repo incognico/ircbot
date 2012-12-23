@@ -6,7 +6,6 @@ use strict;
 use warnings;
 
 my $mytrigger;
-my $rawlog;
 
 my @curses;
 
@@ -29,7 +28,6 @@ sub new {
    my $self = bless(\%self, $package);
 
    $mytrigger = $self->{mytrigger};
-   $rawlog    = $self->{rawlog};
 
    return $self;
 }
