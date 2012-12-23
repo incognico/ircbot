@@ -188,9 +188,13 @@ while (my @raw = split(' ', <$socket>)) {
 
    chomp(@raw);
    printf("<- %s\n", "@raw") if $rawlog;
-   raw('PONG %s', $raw[1]) if ($raw[0] eq 'PING');
 
    local $/ = "\n";
+
+   if ($raw[0] eq 'PING') {
+      raw('PONG %s', $raw[1]);
+      callhook('on_ping');
+   }
 
    ### handle events
 
@@ -314,6 +318,7 @@ sub callhook {
       on_ownpart   => \&on_ownpart,
       on_ownquit   => \&on_ownquit,
       on_part      => \&on_part,
+      on_ping      => \&on_ping,
       on_privmsg   => \&on_privmsg,
       on_quit      => \&on_quit,
       on_umodeg    => \&on_umodeg,
@@ -729,7 +734,7 @@ sub on_umodeg {
    my %uniq;
 
    $uniq{(split('!', $_))[0]}++ for @myadmins;
-   acceptuser($uniq{$nick}) if (exists $uniq{$nick});
+   acceptuser($nick) if (exists $uniq{$nick});
 }
 
 exit 0;

@@ -1,7 +1,3 @@
-# TODO:
-# - Save less :D
-# - Make even more complicated
-
 package invitejoin;
 require modules::utils;
 
@@ -19,7 +15,9 @@ my $mytrigger;
 my $public;
 
 my $cfg;
+my $changed = 0;
 my %invitechannels;
+my %recentkickchannels;
 
 ### start config ###
 
@@ -46,19 +44,15 @@ sub new {
 }
 
 sub autojoin {
-   my $deleted = 0;
-
    for (keys(%{$invitechannels{joinlist}{$$myprofile}})) {
       unless (exists $invitechannels{blacklist}{$$myprofile}{$_} || exists $channels->{$$myprofile}{$_}) {
          utils->joinchan($_);
       }
       else {
          delete $invitechannels{joinlist}{$$myprofile}{$_};
-         $deleted = 1;
+         $changed = 1;
       }
    }
-
-   savecfg() if $deleted;
 }
 
 sub loadcfg {
@@ -91,25 +85,31 @@ sub on_invite {
    elsif (main::isadmin($who)) {
       utils->joinchan($chan);
       $channels->{$$myprofile}{$chan} = '';
-      $joined = 1;
    }
    elsif ($$public) {
       unless (exists $invitechannels{blacklist}{$$myprofile}{$chan}) {
-         utils->joinchan($chan);
-         $invitechannels{joinlist}{$$myprofile}{$chan} = $who;
-         $joined = 1;
+         unless (exists $recentkickchannels{$$myprofile}{$chan}) {
+            utils->joinchan($chan);
+            $invitechannels{joinlist}{$$myprofile}{$chan} = $who;
+            $changed = 1;
+         }
+         else {
+            utils->ntc($nick, 'I was just kicked from %s by %s, please try again later.', $chan, $recentkickchannels{$$myprofile}{$chan});
+         }
+      }
+      else {
+         utils->ntc($nick, '%s is blacklisted.', $chan);
       }
    }
-
-   savecfg() if $joined;
 }
 
 sub on_ownkick {
-   my ($self, $chan) = @_;
+   my ($self, $chan, $nick) = @_;
 
    if (exists $invitechannels{joinlist}{$$myprofile}{$chan}) {
       delete $invitechannels{joinlist}{$$myprofile}{$chan};
-      savecfg();
+      $recentkickchannels{$$myprofile}{$chan} = $nick;
+      $changed = 1;
    }
 }
 
@@ -122,8 +122,13 @@ sub on_ownpart {
 
    if (exists $invitechannels{joinlist}{$$myprofile}{$chan}) {
       delete $invitechannels{joinlist}{$$myprofile}{$chan};
-      savecfg();
+      $changed = 1;
    }
+}
+
+sub on_ping {
+      delete $recentkickchannels{$$myprofile};
+      savecfg() if $changed;
 }
 
 sub on_privmsg {
@@ -248,7 +253,7 @@ sub on_privmsg {
                   }
 
                   if ($added) {
-                     savecfg();
+                     $changed = 1;
                      utils->ack($target);
                   }
                }
@@ -276,7 +281,7 @@ sub on_privmsg {
                   }
 
                   if ($deleted) {
-                     savecfg();
+                     $changed = 1;
                      utils->ack($target);
                   }
                }
