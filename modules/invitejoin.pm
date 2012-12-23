@@ -75,7 +75,6 @@ sub on_autojoin {
 
 sub on_invite {
    my ($self, $nick, $chan, $who) = @_;
-   my $joined = 0;
 
    printf("[%s] *** Invited to %s by %s\n", scalar localtime, $chan, $nick);
 
