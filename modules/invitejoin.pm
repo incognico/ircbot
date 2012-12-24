@@ -10,12 +10,14 @@ use warnings;
 use YAML qw(LoadFile DumpFile);
 
 my $channels;
+my $mychannels;
 my $myprofile;
 my $mytrigger;
 my $public;
 
 my $cfg;
 my $changed = 0;
+my $count = 0;
 my %invitechannels;
 my %recentkickchannels;
 
@@ -31,10 +33,11 @@ sub new {
    my ($package, %self) = @_;
    my $self = bless(\%self, $package);
 
-   $channels      = $self->{channels};
-   $myprofile     = $self->{myprofile};
-   $mytrigger     = $self->{mytrigger};
-   $public        = $self->{public};
+   $channels   = $self->{channels};
+   $mychannels = $self->{mychannels};
+   $myprofile  = $self->{myprofile};
+   $mytrigger  = $self->{mytrigger};
+   $public     = $self->{public};
 
    $cfg = sprintf($cfgname, __PACKAGE__, $$myprofile);
 
@@ -57,14 +60,24 @@ sub autojoin {
 
 sub loadcfg {
    printf("[%s] === modules::%s: Loading config: %s\n", scalar localtime, __PACKAGE__, $cfg);
-
    %invitechannels = LoadFile($cfg);
+}
+
+sub maintenance {
+   for (keys(%{$invitechannels{joinlist}{$$myprofile}})) {
+      if (scalar keys %{$mychannels->{$$myprofile}{$_}} <= 5) {
+         utils->partchan($_);
+         $recentkickchannels{$$myprofile}{$_} = 'my own maintenance routine (channel too small)';
+         delete $invitechannels{joinlist}{$$myprofile}{$_};
+         $changed = 1;
+      }
+   }
 }
 
 sub savecfg {
    printf("[%s] === modules::%s: Saving config: %s\n", scalar localtime, __PACKAGE__, $cfg);
-
    DumpFile($cfg, %invitechannels);
+   $changed = 0;
 }
 
 ### hooks
@@ -126,8 +139,16 @@ sub on_ownpart {
 }
 
 sub on_ping {
-      delete $recentkickchannels{$$myprofile};
-      savecfg() if $changed;
+   if ($count > 5) {
+      $count = 0;
+      maintenance();
+   }
+   else {
+      $count++;
+   }
+
+   delete $recentkickchannels{$$myprofile};
+   savecfg() if $changed;
 }
 
 sub on_privmsg {
@@ -184,7 +205,7 @@ sub on_privmsg {
                   if ($cargs[1] eq 'VERBOSE' || $cargs[1] eq 'V') {
                      for (keys($invitechannels{joinlist}{$$myprofile})) {
                         $count++;
-                        $chans .= sprintf("%s (%s)\n", $_, $invitechannels{joinlist}{$$myprofile}{$_});
+                        utils->msg($target, '%s - %u - %s', $_, scalar keys %{$mychannels->{$$myprofile}{$_}}, $invitechannels{joinlist}{$$myprofile}{$_});
                      }
                   }
                }
@@ -193,13 +214,14 @@ sub on_privmsg {
                      $count++;
                      $chans .= sprintf("%s, ", $_);
                   }
+
+                  utils->msg($target, substr($chans, 0, -2));
                }
                else {
                   utils->err($target, 'syntax: LIST(LS) INVITECHANNELS(INVCHANS) [VERBOSE(V)]');
                }
 
-               if ($chans) {
-                  utils->msg($target, substr($chans, 0, -2));
+               if ($count > 0) {
                   utils->msg($target, 'total: %s', $count);
                }
                else {

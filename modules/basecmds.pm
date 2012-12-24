@@ -207,7 +207,7 @@ sub on_privmsg {
                   $chans .= sprintf("%s, ", $_);
                }
 
-               if ($chans) {
+               if ($count > 0) {
                   utils->msg($target, substr($chans, 0, -2));
                   utils->msg($target, 'total: %s', $count);
                }
@@ -241,13 +241,13 @@ sub on_privmsg {
             utils->err($target, 'syntax: ACT <target> <text>');
          }
       }
-      elsif ($cmd eq 'NOTICE') {
+      elsif ($cmd eq 'NTC') {
          if ($args[1]) {
             utils->ntc($args[0], join(' ', @args[1..$#args]));
             utils->ack($target) unless $args[0] eq $target;
          }
          else {
-            utils->err($target, 'syntax: NOTICE <target> <text>');
+            utils->err($target, 'syntax: NTC <target> <text>');
          }
       }
       elsif ($cmd eq 'ACK') {
