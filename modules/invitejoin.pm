@@ -139,6 +139,9 @@ sub on_ownpart {
 }
 
 sub on_ping {
+   delete $recentkickchannels{$$myprofile};
+   savecfg() if $changed;
+
    if ($count > 5) {
       $count = 0;
       maintenance();
@@ -146,9 +149,6 @@ sub on_ping {
    else {
       $count++;
    }
-
-   delete $recentkickchannels{$$myprofile};
-   savecfg() if $changed;
 }
 
 sub on_privmsg {
@@ -338,6 +338,10 @@ sub on_privmsg {
          }
       }
    }
+}
+
+sub on_unload {
+   savecfg();
 }
 
 1;

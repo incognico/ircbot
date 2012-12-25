@@ -17,13 +17,16 @@ my @yiffs;
 ### start config ###
 
 my $file       = sprintf("$ENV{HOME}/.bot/%s/%ss.txt", __PACKAGE__, __PACKAGE__);
-my $percentage = 1; # 0.25 = 25%
+my $percentage = 0.33; # 0.25 = 25%
 
 ### end config ###
 
 if (-e $file) {
    open my $fh, '<:encoding(UTF-8)', $file || die $!;
-   @yiffs = <$fh>;
+   while(my $line = <$fh>) {
+      chomp $line;
+      push @yiffs, $line;
+   }
    close $fh;
 }
 
@@ -50,17 +53,13 @@ sub on_join {
       my $user = $mychannels->{$$myprofile}{$chan}{(keys $mychannels->{$$myprofile}{$chan})[int rand keys $mychannels->{$$myprofile}{$chan}]};
       my $yiff;
 
-      $yiff = $yiffs[int(rand(~~@yiffs))];
+      $yiff = $yiffs[int(rand(@yiffs))];
       $yiff =~ s/\$nick/$$mynick/g;
       $yiff =~ s/\$target/$nick/g;
       $yiff =~ s/\$user/$user/g;
       $yiff =~ s/\$channel/$chan/g;
 
-      chomp $yiff;
-
-      my $r = rand(1);
-
-      if ($r <= $percentage) {
+      if (rand(1) <= $percentage) {
          utils->act($chan, $yiff);
          printf("[%s] === modules::%s: Yiffed [%s] on %s\n", scalar localtime, __PACKAGE__, $nick, $chan) unless $$rawlog;
       }

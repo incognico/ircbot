@@ -17,11 +17,18 @@ my $file = sprintf("$ENV{HOME}/.bot/%s/%ss.txt", __PACKAGE__, __PACKAGE__);
 
 if (-e $file) {
    open my $fh, '<:encoding(UTF-8)', $file || die $!;
-   @curses = <$fh>;
+   while(my $line = <$fh>) {
+      chomp $line;
+      push @curses, $line;
+   }
    close $fh;
 }
 
 ### functions
+
+sub curse {
+   return $curses[int(rand(@curses))];
+}
 
 sub new {
    my ($package, %self) = @_;
@@ -45,11 +52,7 @@ sub on_privmsg {
 
       # cmds
       if ($cmd eq 'CURSE') {
-         my $curse = $curses[int(rand(~~@curses))];
-
-         chomp $curse;
-
-         utils->msg($target, $curse);
+         utils->msg($target, '%s %s %s', curse(), curse(), curse());
       }
    }
 }

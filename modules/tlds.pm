@@ -59,7 +59,7 @@ sub on_privmsg {
                utils->msg($target, '.%s: %s', $tld, $tlds{$tld});
             }
             else {
-               utils->msg($target, 'no such tld (or tld not in list)');
+               utils->err($target, 'not found');
             }
          }
          else {

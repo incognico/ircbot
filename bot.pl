@@ -442,6 +442,7 @@ sub unloadmodules {
 
    for (@$tounload) {
       if (exists $modules{$_}) {
+         $_->on_unload if $_->can('on_unload');
          printf("[%s] === Unloading module [%s]\n", scalar localtime, $_);
          $refresher->unload_module(sprintf("modules/%s.pm", $_));
          delete $modules{$_};
