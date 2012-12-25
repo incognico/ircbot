@@ -149,6 +149,7 @@ else {
 }
 
 if ($ssl) {
+   IO::Socket::SSL::set_defaults(SSL_verify_mode => SSL_VERIFY_NONE);
    $port = $profiles{$myprofile}{portssl};
 }
 else {

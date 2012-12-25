@@ -32,12 +32,10 @@ if (-e $file1) {
 
 if (-e $file2) {
    open my $fh2, '<:encoding(UTF-8)', $file2 || die $!;
-
    while(my $line = <$fh2>) {
       chomp $line;
       push @words2, $line;
    }
-   
    close $fh2;
 }
 
