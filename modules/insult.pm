@@ -81,6 +81,7 @@ sub on_privmsg {
                }
                else {
                   utils->act($chan, 'thinks that %s is a %s %s', $nick, $word1, $word2);
+                  $insulters{$$myprofile}{$nick}++;
                }
             }
             else {

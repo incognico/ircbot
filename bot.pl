@@ -164,6 +164,7 @@ loadmodules(\@mymodules);
 my $refresher = Module::Refresh->new;
 
 ### connection
+my @lastraw;
 my $connected = 0;
 my $nicktries = 0;
 
@@ -268,6 +269,19 @@ while (my @raw = split(' ', <$socket>)) {
          callhook('on_connected');
       }
    }
+
+   push(@lastraw, "@raw");
+   shift(@lastraw) if ($#lastraw >= 3)
+}
+
+callhook('on_ownquit');
+
+unless ($connected) {
+   printf("[%s] *** %s: clean exit\n", scalar localtime, $mynick) unless $rawlog;
+}
+else {
+   printf("[%s] *** %s: dirty exit\nLast raw lines:\n", scalar localtime, $mynick) unless $rawlog;
+   printf('<- %s', $_) for (@lastraw);
 }
 
 ### functions
@@ -275,7 +289,7 @@ while (my @raw = split(' ', <$socket>)) {
 sub acceptadmins {
    my %uniq;
 
-   $uniq{(split('!', $_))[0]}++ for @myadmins;
+   $uniq{(split('!', $_))[0]}++ for(@myadmins);
    acceptuser($_) for (keys(%uniq));
 }
 
@@ -456,9 +470,8 @@ sub unloadmodules {
 }
 
 sub quit {
-   callhook('on_ownquit');
    raw('QUIT :k');
-   printf("[%s] *** %s: exiting\n", scalar localtime, $mynick) unless $rawlog;
+   $connected = 0;
 }
 
 #### main hooks
@@ -735,7 +748,7 @@ sub on_umodeg {
    my $nick = shift || return;
    my %uniq;
 
-   $uniq{(split('!', $_))[0]}++ for @myadmins;
+   $uniq{(split('!', $_))[0]}++ for(@myadmins);
    acceptuser($nick) if (exists $uniq{$nick});
 }
 
