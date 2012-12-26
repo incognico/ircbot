@@ -215,12 +215,41 @@ sub on_privmsg {
                   utils->msg($target, 'no channels joined');
                }
             }
+            elsif ($cargs[0] eq 'NAMES') {
+               if ($args[1]) {
+                  if (main::ischan($args[1])) {
+                     if (exists $mychannels->{$$myprofile}{$args[1]}) {
+                        my $names;
+                        my $count = 0;
+
+                        for (keys(%{$mychannels->{$$myprofile}{$args[1]}})) {
+                           $count++;
+                           $names .= sprintf("%s, ", $_);
+                        }
+
+                        if ($count > 0) {
+                           utils->msg($target, substr($names, 0, -2));
+                           utils->msg($target, 'total: %s', $count);
+                        }
+                     }
+                     else {
+                        utils->msg($target, 'not on %s', $args[1]);
+                     }
+                  }
+                  else {
+                     utils->msg($target, '%s is not a valid channel', $args[1]);
+                  }
+               }
+               else {
+                  utils->err($target, 'syntax: LIST(LS) NAMES <channel>');
+               }
+            }
             elsif ($cargs[0] eq 'HELP') {
-               utils->hlp($target, 'syntax: LIST(LS) CHANNELS(CHANS)');
+               utils->hlp($target, 'syntax: LIST(LS) CHANNELS(CHANS) | LIST(LS) NAMES <channel>');
             }
          }
          else {
-            utils->err($target, 'syntax: LIST(LS) CHANNELS(CHANS)');
+            utils->err($target, 'syntax: LIST(LS) CHANNELS(CHANS) | LIST(LS) NAMES <channel>');
          }
       }
       elsif ($cmd eq 'MSG') {
