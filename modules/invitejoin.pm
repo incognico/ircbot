@@ -90,27 +90,29 @@ sub on_invite {
    my ($self, $nick, $chan, $who) = @_;
 
    printf("[%s] *** Invited to %s by %s\n", scalar localtime, $chan, $nick);
-
-   if (exists $channels->{$$myprofile}{$chan}) {
-      utils->joinchan($chan);
-   }
-   elsif (main::isadmin($who)) {
+   
+   if (main::isadmin($who)) {
       utils->joinchan($chan);
       $channels->{$$myprofile}{$chan} = '';
    }
    elsif ($$public) {
-      unless (exists $invitechannels{blacklist}{$$myprofile}{$chan}) {
-         unless (exists $recentkickchannels{$$myprofile}{$chan}) {
-            utils->joinchan($chan);
-            $invitechannels{joinlist}{$$myprofile}{$chan} = $who;
-            $changed = 1;
+      unless (exists $channels->{$$myprofile}{$chan}) {
+         unless (exists $invitechannels{blacklist}{$$myprofile}{$chan}) {
+            unless (exists $recentkickchannels{$$myprofile}{$chan}) {
+               utils->joinchan($chan);
+               $invitechannels{joinlist}{$$myprofile}{$chan} = $who;
+               $changed = 1;
+            }
+            else {
+               utils->ntc($nick, 'I was just kicked from %s by %s, please try again later.', $chan, $recentkickchannels{$$myprofile}{$chan});
+            }
          }
          else {
-            utils->ntc($nick, 'I was just kicked from %s by %s, please try again later.', $chan, $recentkickchannels{$$myprofile}{$chan});
+            utils->ntc($nick, '%s is blacklisted.', $chan);
          }
       }
       else {
-         utils->ntc($nick, '%s is blacklisted.', $chan);
+         utils->joinchan($chan);
       }
    }
 }
