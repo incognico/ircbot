@@ -1,4 +1,4 @@
-package spin;
+package insult;
 require modules::utils;
 
 use utf8;
@@ -12,7 +12,7 @@ my $mytrigger;
 
 my @words1;
 my @words2;
-my %spinner;
+my %insulters;
 
 ### start config ###
 
@@ -56,7 +56,7 @@ sub new {
 ### hooks
 
 sub on_ping {
-   delete $spinner{$$myprofile};
+   delete $insulters{$$myprofile};
 }
 
 sub on_privmsg {
@@ -69,19 +69,26 @@ sub on_privmsg {
       return unless $ischan;
 
       # cmds
-      if ($cmd eq 'SPIN') {
-         my $word1 = $words1[int(rand(@words1))];
-         my $word2 = $words2[int(rand(@words2))];
-
-         unless (exists $spinner{$$myprofile}{$nick}) {
-            my $user = (keys $mychannels->{$$myprofile}{$chan})[int rand keys $mychannels->{$$myprofile}{$chan}];
-
-            $user = $nick if ($user eq $$mynick);
-            utils->msg($chan, '%s is a %s %s', $user, $word1, $word2);
-            $spinner{$$myprofile}{$nick}++;
+      if ($cmd eq 'INSULT') {
+         if ($args[0] && exists $mychannels->{$$myprofile}{$chan}{$args[0]}) {
+            unless (exists $insulters{$$myprofile}{$nick}) {
+               my $word1 = $words1[int(rand(@words1))];
+               my $word2 = $words2[int(rand(@words2))];
+               
+               unless ($args[0] eq $$mynick || $args[0] eq $nick) {
+                  utils->msg($chan, '%s thinks that %s is a %s %s', $nick, $args[0], $word1, $word2);
+                  $insulters{$$myprofile}{$nick}++;
+               }
+               else {
+                  utils->act($chan, 'thinks that %s is a %s %s', $nick, $word1, $word2);
+               }
+            }
+            else {
+               utils->ntc($nick, 'Calm down and wait some minutes before you try again.');
+            }
          }
          else {
-            utils->ntc($nick, 'You are a really %s but nice human being. Wait some minutes before you try again.', $word1, $word2);
+            utils->msg($chan, 'Everybody look how %s is failing, ha ha ha!', $nick); 
          }
       }
    }
