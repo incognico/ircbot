@@ -420,7 +420,7 @@ sub ircgate {
             my $gatesub = $data[1];
 
             if ($gatesub) {
-               printf("[%s] === ircgate: module [%s] got: %s\n", scalar localtime, $gatemod, join(' ', @data[2..$#data]));
+               printf("[%s] === ircgate: module [%s] %s(%s)\n", scalar localtime, $gatemod, $gatesub, join(' ', @data[2..$#data]));
                $gatemod->$gatesub(@data[2..$#data]) if $gatemod->can($gatesub);
             }
          }
@@ -617,8 +617,8 @@ sub unloadmodules {
 }
 
 sub quit {
-   raw('QUIT :k');
    $connected = 0;
+   raw('QUIT :k');
 }
 
 #### main hooks
