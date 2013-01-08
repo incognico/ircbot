@@ -13,6 +13,7 @@ use utf8;
 use strict;
 use warnings;
 use threads;
+use threads::shared;
 use feature 'switch';
 use sigtrap 'handler', \&quit, 'INT';
 
@@ -167,7 +168,7 @@ my $refresher = Module::Refresh->new;
 
 ### connection
 my @lastraw;
-my $connected = 0;
+my $connected :shared = 0;
 my $nicktries = 0;
 
 if ($useoident) {
@@ -285,7 +286,7 @@ unless ($connected) {
 }
 else {
    printf("[%s] *** %s: dirty exit\nLast raw lines:\n", scalar localtime, $mynick) unless $rawlog;
-   printf("<- %s\n", $_) for (@lastraw);
+   printf("<- %s\n", $_) for @lastraw;
 }
 
 ### functions
@@ -293,8 +294,8 @@ else {
 sub acceptadmins {
    my %uniq;
 
-   $uniq{(split('!', $_))[0]}++ for(@myadmins);
-   acceptuser($_) for (keys(%uniq));
+   $uniq{(split('!', $_))[0]}++ for @myadmins;
+   acceptuser($_) for keys(%uniq);
 }
 
 sub acceptuser {
@@ -488,6 +489,7 @@ sub loadmodules {
                unless ($@) {
                   $modules{$_} = $_->new(
                      channels      => \%channels,
+                     logtodb       => \$logtodb,
                      myadmins      => \@myadmins,
                      mychannels    => \%mychannels,
                      myhelptext    => \$myhelptext,
@@ -871,11 +873,11 @@ sub on_privmsg {
                }
             }
             elsif ($cargs[0] eq 'HELP') {
-               hlp($target, $_) for (@syntax);
+               hlp($target, $_) for @syntax;
             }
          }
          elsif (!$args[0]) {
-            err($target, $_) for (@syntax);
+            err($target, $_) for @syntax;
          }
       }
    }
@@ -884,14 +886,14 @@ sub on_privmsg {
 sub on_quit {
    my ($nick, undef) = @_;
 
-   delete $mychannels{$myprofile}{$_}{$nick} for (keys(%{$mychannels{$myprofile}}));
+   delete $mychannels{$myprofile}{$_}{$nick} for keys(%{$mychannels{$myprofile}});
 }
 
 sub on_umodeg {
    my $nick = shift || return;
    my %uniq;
 
-   $uniq{(split('!', $_))[0]}++ for(@myadmins);
+   $uniq{(split('!', $_))[0]}++ for @myadmins;
    acceptuser($nick) if (exists $uniq{$nick});
 }
 
