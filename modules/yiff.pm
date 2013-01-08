@@ -1,7 +1,6 @@
 # ported (lol) from https://github.com/derpcat/YiffServ/blob/master/YiffServ.pl
 
 package yiff;
-require modules::utils;
 
 use utf8;
 use strict;
@@ -17,7 +16,7 @@ my @yiffs;
 ### start config ###
 
 my $file       = sprintf("$ENV{HOME}/.bot/%s/%ss.txt", __PACKAGE__, __PACKAGE__);
-my $percentage = 0.33; # 0.25 = 25%
+my $percentage = 0.2; # 0.25 = 25%
 
 ### end config ###
 
@@ -60,7 +59,7 @@ sub on_join {
       $yiff =~ s/\$channel/$chan/g;
 
       if (rand(1) <= $percentage) {
-         utils->act($chan, $yiff);
+         main::act($chan, $yiff);
          printf("[%s] === modules::%s: Yiffed [%s] on %s\n", scalar localtime, __PACKAGE__, $nick, $chan) unless $$rawlog;
       }
    }

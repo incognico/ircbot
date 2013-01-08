@@ -1,5 +1,4 @@
 package invitejoin;
-require modules::utils;
 
 use utf8;
 use strict;
@@ -49,7 +48,7 @@ sub new {
 sub autojoin {
    for (keys(%{$invitechannels{joinlist}{$$myprofile}})) {
       unless (exists $invitechannels{blacklist}{$$myprofile}{$_} || exists $channels->{$$myprofile}{$_}) {
-         utils->joinchan($_);
+         main::joinchan($_);
       }
       else {
          delete $invitechannels{joinlist}{$$myprofile}{$_};
@@ -66,7 +65,7 @@ sub loadcfg {
 sub maintenance {
    for (keys(%{$invitechannels{joinlist}{$$myprofile}})) {
       if (scalar keys %{$mychannels->{$$myprofile}{$_}} <= 5) {
-         utils->partchan($_);
+         main::partchan($_);
          $recentkickchannels{$$myprofile}{$_} = 'my own maintenance routine (channel too small)';
          delete $invitechannels{joinlist}{$$myprofile}{$_};
          $changed = 1;
@@ -92,27 +91,27 @@ sub on_invite {
    printf("[%s] *** Invited to %s by %s\n", scalar localtime, $chan, $nick);
    
    if (main::isadmin($who)) {
-      utils->joinchan($chan);
+      main::joinchan($chan);
       $channels->{$$myprofile}{$chan} = '';
    }
    elsif ($$public) {
       unless (exists $channels->{$$myprofile}{$chan}) {
          unless (exists $invitechannels{blacklist}{$$myprofile}{$chan}) {
             unless (exists $recentkickchannels{$$myprofile}{$chan}) {
-               utils->joinchan($chan);
+               main::joinchan($chan);
                $invitechannels{joinlist}{$$myprofile}{$chan} = $who;
                $changed = 1;
             }
             else {
-               utils->ntc($nick, 'I was just kicked from %s by %s, please try again later.', $chan, $recentkickchannels{$$myprofile}{$chan});
+               main::ntc($nick, 'I was just kicked from %s by %s, please try again later.', $chan, $recentkickchannels{$$myprofile}{$chan});
             }
          }
          else {
-            utils->ntc($nick, '%s is blacklisted.', $chan);
+            main::ntc($nick, '%s is blacklisted.', $chan);
          }
       }
       else {
-         utils->joinchan($chan);
+         main::joinchan($chan);
       }
    }
 }
@@ -144,7 +143,7 @@ sub on_ping {
    delete $recentkickchannels{$$myprofile};
    savecfg() if $changed;
 
-   if ($count > 5) {
+   if ($count >= 5) {
       $count = 0;
       maintenance();
    }
@@ -175,26 +174,26 @@ sub on_privmsg {
                if ($args[1]) {
                   if ($cargs[1] eq 'ON') {
                      $$public = 1;
-                     utils->ack($target);
+                     main::ack($target);
                   }
                   elsif ($cargs[1] eq 'OFF') {
                      $$public = 0;
-                     utils->ack($target);
+                     main::ack($target);
                   }
                }
                elsif (!$args[1]) {
-                  utils->msg($target, 'PUBLIC: %s', $$public ? 'ON' : 'OFF');
+                  main::msg($target, 'PUBLIC: %s', $$public ? 'ON' : 'OFF');
                }
                else {
-                  utils->err($target, 'syntax: SET PUBLIC [ON|OFF]');
+                  main::err($target, 'syntax: SET PUBLIC [ON|OFF]');
                }
             }
             elsif ($cargs[0] eq 'HELP') {
-               utils->hlp($target, $syntax);
+               main::hlp($target, $syntax);
             }
          }
          else {
-            utils->err($target, $syntax);
+            main::err($target, $syntax);
          }
       }
       elsif ($cmd eq 'LIST' || $cmd eq 'LS') {
@@ -207,7 +206,7 @@ sub on_privmsg {
                   if ($cargs[1] eq 'VERBOSE' || $cargs[1] eq 'V') {
                      for (keys($invitechannels{joinlist}{$$myprofile})) {
                         $count++;
-                        utils->msg($target, '%s - %u - %s', $_, scalar keys %{$mychannels->{$$myprofile}{$_}}, $invitechannels{joinlist}{$$myprofile}{$_});
+                        main::msg($target, '%s - %u - %s', $_, scalar keys %{$mychannels->{$$myprofile}{$_}}, $invitechannels{joinlist}{$$myprofile}{$_});
                      }
                   }
                }
@@ -217,25 +216,25 @@ sub on_privmsg {
                      $chans .= sprintf("%s, ", $_);
                   }
 
-                  utils->msg($target, substr($chans, 0, -2));
+                  main::msg($target, substr($chans, 0, -2));
                }
                else {
-                  utils->err($target, 'syntax: LIST(LS) INVITECHANNELS(INVCHANS) [VERBOSE(V)]');
+                  main::err($target, 'syntax: LIST(LS) INVITECHANNELS(INVCHANS) [VERBOSE(V)]');
                }
 
                if ($count > 0) {
-                  utils->msg($target, 'total: %s', $count);
+                  main::msg($target, 'total: %s', $count);
                }
                else {
-                  utils->msg($target, "no invite-channels joined");
+                  main::msg($target, "no invite-channels joined");
                }
             }
             elsif ($cargs[0] eq 'HELP') {
-               utils->hlp($target, 'syntax: LIST(LS) INVITECHANNELS(INVCHANS) [VERBOSE(V)]');
+               main::hlp($target, 'syntax: LIST(LS) INVITECHANNELS(INVCHANS) [VERBOSE(V)]');
             }
          }
          else {
-            utils->err($target, 'syntax: LIST(LS) INVITECHANNELS(INVCHANS) [VERBOSE(V)]');
+            main::err($target, 'syntax: LIST(LS) INVITECHANNELS(INVCHANS) [VERBOSE(V)]');
          }
       }
       elsif ($cmd eq 'BLACKLIST' || $cmd eq 'BL') {
@@ -252,91 +251,91 @@ sub on_privmsg {
                }
 
                if ($chans) {
-                  utils->msg($target, substr($chans, 0, -2));
-                  utils->msg($target, 'total: %s', $count);
+                  main::msg($target, substr($chans, 0, -2));
+                  main::msg($target, 'total: %s', $count);
                }
                else {
-                  utils->msg($target, "no channels blacklisted");
+                  main::msg($target, "no channels blacklisted");
                }
             }
             elsif ($cargs[0] eq 'ADD') {
                if ($args[1]) {
                   my $added = 0;
 
-                  for (split(' ', utils->chantrim("@args[1..$#args]"))) {
+                  for (split(' ', main::chantrim("@args[1..$#args]"))) {
                      if (main::ischan($_)) {
-                        utils->partchan($_);
+                        main::partchan($_);
                         $invitechannels{blacklist}{$$myprofile}{$_}++;
                         delete $invitechannels{joinlist}{$$myprofile}{$_};
                         $added = 1;
                      }
                      else {
-                        utils->err($target, '%s is not a valid channel', $_);
+                        main::err($target, '%s is not a valid channel', $_);
                      }
                   }
 
                   if ($added) {
                      $changed = 1;
-                     utils->ack($target);
+                     main::ack($target);
                   }
                }
                else {
-                  utils->err($target, 'syntax: BLACKLIST(BL) ADD <channel> [,<channel>]...');
+                  main::err($target, 'syntax: BLACKLIST(BL) ADD <channel> [,<channel>]...');
                }
             }
             elsif ($cargs[0] eq 'DELETE' || $cargs[0] eq 'DEL') {
                if ($args[1]) {
                   my $deleted = 0;
 
-                  for (split(' ', utils->chantrim("@args[1..$#args]"))) {
+                  for (split(' ', main::chantrim("@args[1..$#args]"))) {
                      if (main::ischan($_)) {
                         if (exists $invitechannels{blacklist}{$$myprofile}{$_}) {
                            delete $invitechannels{blacklist}{$$myprofile}{$_};
                            $deleted = 1;
                         }
                         else {
-                           utils->err($target, '%s is not blacklisted', $_);
+                           main::err($target, '%s is not blacklisted', $_);
                         }
                      }
                      else {
-                        utils->err($target, '%s is not a valid channel', $_);
+                        main::err($target, '%s is not a valid channel', $_);
                      }
                   }
 
                   if ($deleted) {
                      $changed = 1;
-                     utils->ack($target);
+                     main::ack($target);
                   }
                }
                else {
-                  utils->err($target, 'syntax: BLACKLIST(BL) DELETE(DEL) <channel> [,<channel>]...');
+                  main::err($target, 'syntax: BLACKLIST(BL) DELETE(DEL) <channel> [,<channel>]...');
                }
             }
             elsif ($cargs[0] eq 'CHECK' || $cargs[0] eq 'CHK') {
                if ($cargs[1]) {
                   my $blacklisted;
 
-                  for (split(' ', utils->chantrim("@args[1..$#args]"))) {
+                  for (split(' ', main::chantrim("@args[1..$#args]"))) {
                      $blacklisted .= sprintf("%s ,", $_) if exists $invitechannels{blacklist}{$$myprofile}{$_};
                   }
 
                   if ($blacklisted) {
-                     utils->msg($target, 'blacklisted: %s', substr($blacklisted, 0, -2));
+                     main::msg($target, 'blacklisted: %s', substr($blacklisted, 0, -2));
                   }
                   else {
-                     utils->msg($target, "channel(s) not blacklisted");
+                     main::msg($target, "channel(s) not blacklisted");
                   }
                }
                else {
-                  utils->err($target, 'syntax: BLACKLIST(BL) CHECK(CHK) <channel> [,<channel>]...');
+                  main::err($target, 'syntax: BLACKLIST(BL) CHECK(CHK) <channel> [,<channel>]...');
                }
             }
             elsif ($cargs[0] eq 'HELP') {
-               utils->hlp($target, $_) for (@syntax);
+               main::hlp($target, $_) for (@syntax);
             }
          }
          elsif (!$args[0]) {
-            utils->err($target, $_) for (@syntax);
+            main::err($target, $_) for (@syntax);
          }
       }
    }

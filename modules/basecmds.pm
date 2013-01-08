@@ -1,5 +1,4 @@
 package basecmds;
-require modules::utils;
 
 use Data::Dumper;
 
@@ -8,7 +7,6 @@ use strict;
 use warnings;
 
 my $channels;
-my $logtodb;
 my $myadmins;
 my $mychannels;
 my $myhelptext;
@@ -25,7 +23,6 @@ sub new {
    my $self = bless(\%self, $package);
 
    $channels      = $self->{channels};
-   $logtodb       = $self->{logtodb};
    $myadmins      = $self->{myadmins};
    $mychannels    = $self->{mychannels};
    $myhelptext    = $self->{myhelptext};
@@ -53,14 +50,14 @@ sub on_privmsg {
 
       # cmds
       if ($cmd eq 'HELP') {
-         utils->msg($target, $$myhelptext) if $$myhelptext;
+         main::msg($target, $$myhelptext) if $$myhelptext;
       }
       elsif ($cmd eq 'SPAST') {
          if ($args[0]) {
-            utils->msg($target, 'http://spa.st/%s', $args[0]);
+            main::msg($target, 'http://spa.st/%s', $args[0]);
          }
          else {
-            utils->msg($target, 'http://spa.st/%s', $nick);
+            main::msg($target, 'http://spa.st/%s', $nick);
          }
       }
 
@@ -75,62 +72,62 @@ sub on_privmsg {
                if ($args[1]) {
                   if ($cargs[1] eq 'ON') {
                      $$rawlog = 1;
-                     utils->ack($target);
+                     main::ack($target);
                   }
                   elsif ($cargs[1] eq 'OFF') {
                      $$rawlog = 0;
-                     utils->ack($target);
+                     main::ack($target);
                   }
                }
                elsif (!$args[1]) {
-                  utils->msg($target, 'RAWLOG: %s', $$rawlog ? 'ON' : 'OFF');
+                  main::msg($target, 'RAWLOG: %s', $$rawlog ? 'ON' : 'OFF');
                }
                else {
-                  utils->err($target, 'syntax: SET RAWLOG [ON|OFF]');
+                  main::err($target, 'syntax: SET RAWLOG [ON|OFF]');
                }
             }
             elsif ($cargs[0] eq 'SILENT') {
                if ($args[1]) {
                   if ($cargs[1] eq 'ON') {
                      $$silent = 1;
-                     utils->ack($target);
+                     main::ack($target);
                   }
                   elsif ($cargs[1] eq 'OFF') {
                      $$silent = 0;
-                     utils->ack($target);
+                     main::ack($target);
                   }
                }
                elsif (!$args[1]) {
-                  utils->msg($target, 'SILENT: %s', $$silent ? 'ON' : 'OFF');
+                  main::msg($target, 'SILENT: %s', $$silent ? 'ON' : 'OFF');
                }
                else {
-                  utils->err($target, 'syntax: SET SILENT [ON|OFF]');
+                  main::err($target, 'syntax: SET SILENT [ON|OFF]');
                }
             }
             elsif ($cargs[0] eq 'HELP') {
-               utils->hlp($target, $syntax);
+               main::hlp($target, $syntax);
             }
          }
          else {
-            utils->err($target, $syntax);
+            main::err($target, $syntax);
          }
       }
       elsif ($cmd eq 'RAW') {
          if ($args[0]) {
             main::raw("%s", "@args");
-            utils->ack($target);
+            main::ack($target);
          }
          else {
-            utils->err($target, 'syntax: RAW <input>');
+            main::err($target, 'syntax: RAW <input>');
          }
       }
       elsif ($cmd eq 'EVAL') {
          if ($args[0]) {
             eval("@args");
-            utils->msg($target, $@) if $@;
+            main::msg($target, $@) if $@;
          }
          else {
-            utils->err($target, 'syntax: EVAL <perl code>');
+            main::err($target, 'syntax: EVAL <perl code>');
          }
       }
       elsif ($cmd eq 'SHELL') {
@@ -138,61 +135,64 @@ sub on_privmsg {
             for (`@args 2>&1`) {
                $_ =~ s/\t/ /g;
                $_ =~ s/_\x8//g;
-               utils->msg($target, $_);
+               main::msg($target, $_);
             }
 
-            if ($? >> 8 != 0) {
-               utils->err($target, 'returned: %s', $? >> 8);
+            if ($? == -1 ) {
+               main::err($target, 'command not found');
+            }
+            elsif ($? >> 8 != 0) {
+               main::err($target, 'returned: %d', $? >> 8);
             }
          }
          else {
-            utils->err($target, 'syntax: SHELL <command>');
+            main::err($target, 'syntax: SHELL <command>');
          }
       }
       elsif ($cmd eq 'JOIN') {
          if ($args[0]) {
             my $joined = 0;
 
-            for (split(' ', utils->chantrim("@args"))) {
+            for (split(' ', main::chantrim("@args"))) {
                if (main::ischan($_)) {
-                  utils->joinchan($_);
+                  main::joinchan($_);
                   $channels->{$$myprofile}{$_} = $args[1] ? $args[1] : '';
                   $joined = 1;
                }
                else {
-                  utils->err($target, '%s is not a valid channel', $_);
+                  main::err($target, '%s is not a valid channel', $_);
                }
             }
 
-            utils->ack($target) if $joined;
+            main::ack($target) if $joined;
          }
          else {
-            utils->err($target, 'syntax: JOIN <channel>');
+            main::err($target, 'syntax: JOIN <channel>');
          }
       }
       elsif ($cmd eq 'PART') {
          if ($args[0]) {
             my $parted = 0;
 
-            for (split(' ', utils->chantrim("@args"))) {
+            for (split(' ', main::chantrim("@args"))) {
                if (main::ischan($_)) {
-                  utils->partchan($_);
+                  main::partchan($_);
                   delete $channels->{$$myprofile}{$_};
                   $parted = 1;
                }
                else {
-                  utils->err($target, '%s is not a valid channel', $_);
+                  main::err($target, '%s is not a valid channel', $_);
                }
             }
 
-            utils->ack($target) if $parted;
+            main::ack($target) if $parted;
          }
          else {
             if (main::ischan($target)) {
-               utils->partchan($target);
+               main::partchan($target);
             }
             else {
-               utils->err($target, 'syntax: PART <channel> [,<channel>]...');
+               main::err($target, 'syntax: PART <channel> [,<channel>]...');
             }
          }
       }
@@ -208,11 +208,11 @@ sub on_privmsg {
                }
 
                if ($count > 0) {
-                  utils->msg($target, substr($chans, 0, -2));
-                  utils->msg($target, 'total: %s', $count);
+                  main::msg($target, substr($chans, 0, -2));
+                  main::msg($target, 'total: %s', $count);
                }
                else {
-                  utils->msg($target, 'no channels joined');
+                  main::msg($target, 'no channels joined');
                }
             }
             elsif ($cargs[0] eq 'NAMES') {
@@ -228,59 +228,59 @@ sub on_privmsg {
                         }
 
                         if ($count > 0) {
-                           utils->msg($target, substr($names, 0, -2));
-                           utils->msg($target, 'total: %s', $count);
+                           main::msg($target, substr($names, 0, -2));
+                           main::msg($target, 'total: %s', $count);
                         }
                      }
                      else {
-                        utils->msg($target, 'not on %s', $args[1]);
+                        main::msg($target, 'not on %s', $args[1]);
                      }
                   }
                   else {
-                     utils->msg($target, '%s is not a valid channel', $args[1]);
+                     main::msg($target, '%s is not a valid channel', $args[1]);
                   }
                }
                else {
-                  utils->err($target, 'syntax: LIST(LS) NAMES <channel>');
+                  main::err($target, 'syntax: LIST(LS) NAMES <channel>');
                }
             }
             elsif ($cargs[0] eq 'HELP') {
-               utils->hlp($target, 'syntax: LIST(LS) CHANNELS(CHANS) | LIST(LS) NAMES <channel>');
+               main::hlp($target, 'syntax: LIST(LS) CHANNELS(CHANS) | LIST(LS) NAMES <channel>');
             }
          }
          else {
-            utils->err($target, 'syntax: LIST(LS) CHANNELS(CHANS) | LIST(LS) NAMES <channel>');
+            main::err($target, 'syntax: LIST(LS) CHANNELS(CHANS) | LIST(LS) NAMES <channel>');
          }
       }
       elsif ($cmd eq 'MSG') {
          if ($args[1]) {
-            utils->msg($args[0], join(' ', @args[1..$#args]));
-            utils->ack($target) unless $args[0] eq $target;
+            main::msg($args[0], join(' ', @args[1..$#args]));
+            main::ack($target) unless $args[0] eq $target;
          }
          else {
-            utils->err($target, 'syntax: MSG <target> <text>');
+            main::err($target, 'syntax: MSG <target> <text>');
          }
       }
       elsif ($cmd eq 'ACT') {
          if ($args[1]) {
-            utils->act($args[0], join(' ', @args[1..$#args]));
-            utils->ack($target) unless $args[0] eq $target;
+            main::act($args[0], join(' ', @args[1..$#args]));
+            main::ack($target) unless $args[0] eq $target;
          }
          else {
-            utils->err($target, 'syntax: ACT <target> <text>');
+            main::err($target, 'syntax: ACT <target> <text>');
          }
       }
       elsif ($cmd eq 'NTC') {
          if ($args[1]) {
-            utils->ntc($args[0], join(' ', @args[1..$#args]));
-            utils->ack($target) unless $args[0] eq $target;
+            main::ntc($args[0], join(' ', @args[1..$#args]));
+            main::ack($target) unless $args[0] eq $target;
          }
          else {
-            utils->err($target, 'syntax: NTC <target> <text>');
+            main::err($target, 'syntax: NTC <target> <text>');
          }
       }
       elsif ($cmd eq 'ACK') {
-         utils->ack($target);
+         main::ack($target);
       }
    }
 }

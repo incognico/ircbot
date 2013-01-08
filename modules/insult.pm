@@ -1,5 +1,4 @@
 package insult;
-require modules::utils;
 
 use utf8;
 use strict;
@@ -76,20 +75,20 @@ sub on_privmsg {
                my $word2 = $words2[int(rand(@words2))];
                
                unless ($args[0] eq $$mynick || $args[0] eq $nick) {
-                  utils->msg($chan, '%s thinks that %s is a %s %s', $nick, $args[0], $word1, $word2);
+                  main::msg($chan, '%s thinks that %s is a %s %s', $nick, $args[0], $word1, $word2);
                   $insulters{$$myprofile}{$nick}++;
                }
                else {
-                  utils->act($chan, 'thinks that %s is a %s %s', $nick, $word1, $word2);
+                  main::act($chan, 'thinks that %s is a %s %s', $nick, $word1, $word2);
                   $insulters{$$myprofile}{$nick}++;
                }
             }
             else {
-               utils->ntc($nick, 'Calm down and wait some minutes before you try again.');
+               main::ntc($nick, 'Calm down and wait some minutes before you try again.');
             }
          }
          else {
-            utils->msg($chan, 'Everybody look how %s is failing, ha ha ha!', $nick); 
+            main::msg($chan, 'Everybody look how %s is failing, ha ha ha!', $nick); 
          }
       }
    }

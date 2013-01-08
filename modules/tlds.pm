@@ -1,5 +1,4 @@
 package tlds;
-require modules::utils;
 
 use utf8;
 use strict;
@@ -56,14 +55,14 @@ sub on_privmsg {
             my $tld = lc((substr($args[0], 0, 1) eq '.') ? substr($args[0], 1) : $args[0]);
 
             if (exists $tlds{$tld}) {
-               utils->msg($target, '.%s: %s', $tld, $tlds{$tld});
+               main::msg($target, '.%s: %s', $tld, $tlds{$tld});
             }
             else {
-               utils->err($target, 'not found');
+               main::err($target, 'not found');
             }
          }
          else {
-            utils->err($target, 'syntax: TLD <[.]tld>');
+            main::err($target, 'syntax: TLD <[.]tld>');
          }
       }
    }

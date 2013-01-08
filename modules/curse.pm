@@ -1,5 +1,4 @@
 package curse;
-require modules::utils;
 
 use utf8;
 use strict;
@@ -52,7 +51,7 @@ sub on_privmsg {
 
       # cmds
       if ($cmd eq 'CURSE') {
-         utils->msg($target, '%s %s %s', curse(), curse(), curse());
+         main::msg($target, '%s %s %s', curse(), curse(), curse());
       }
    }
 }

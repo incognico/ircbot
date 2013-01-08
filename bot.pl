@@ -4,7 +4,6 @@
 # - Reduce complexity (rewrite this piece of crap lol)
 # - Track usermodes
 # - Use Carp in modules
-# - Fix require utils in modules
 
 # ./bot.pl -p <profile name>
 # 
@@ -13,6 +12,7 @@
 use utf8;
 use strict;
 use warnings;
+use threads;
 use feature 'switch';
 use sigtrap 'handler', \&quit, 'INT';
 
@@ -21,6 +21,7 @@ no warnings 'qw';
 use Carp;
 use Getopt::Std;
 use Module::Refresh;
+use File::Tail;
 
 our $opt_p;
 getopt('p');
@@ -31,15 +32,17 @@ my $myprofile; # -p overrides
 # settings (defaults)
 my $rawlog       = 0;
 my $silent       = 0; 
+my $logtodb      = 0;
 my $public       = 1;
 my $rejoinonkick = 1;
+my $splitlen     = 400;
 my $useoident    = 1;
 my $mytrigger    = '!';
 my $myaddr4      = '127.0.0.1';
 my $myaddr6      = '::1';
 my $adminpass    = 'secret';
 my @myadmins     = qw(nico!nico@lifeisabug.com other!mask@of.some.admin);
-my @mymodules    = qw(utils basecmds invitejoin tlds);
+my @mymodules    = qw(basecmds invitejoin tlds);
 my $myhelptext   = 'Help yourself.';
 
 # profiles (networks)
@@ -70,7 +73,7 @@ my %profiles = (
       silent            => 1,
       admins            => [qw(the!yiff@admin.only)],
       adminpass         => 'specialsecret',
-      modules           => [qw(utils basecmds yiff)],
+      modules           => [qw(basecmds yiff)],
    },
 );
 
@@ -183,6 +186,8 @@ my $socket = ($ssl ? 'IO::Socket::SSL' : ($ipv6 ? 'IO::Socket::INET6' : 'IO::Soc
 raw('NICK %s', $mynick);
 raw('USER %s 8 * :%s', $myuser, $myuserinfo);
 
+threads->create(\&ircgate)->detach();
+
 ### main loop
 
 while (my @raw = split(' ', <$socket>)) {
@@ -281,7 +286,7 @@ unless ($connected) {
 }
 else {
    printf("[%s] *** %s: dirty exit\nLast raw lines:\n", scalar localtime, $mynick) unless $rawlog;
-   printf('<- %s', $_) for (@lastraw);
+   printf("<- %s\n", $_) for (@lastraw);
 }
 
 ### functions
@@ -299,6 +304,21 @@ sub acceptuser {
    raw('ACCEPT %s', $nick);
    raw('ACCEPT +%s', $nick);
    printf("[%s] *** Accepted %s\n", scalar localtime, $nick) unless $rawlog;
+}
+
+sub ack {
+   my $target = shift;
+
+   msg($target, 'done {::%s}', caller) unless $silent;
+}
+
+sub act {
+   my $target = shift;
+   my $act    = sprintf(shift, @_);
+
+   for (split(/\n|(.{$splitlen})/, $act)) {
+      raw("PRIVMSG %s :\001ACTION %s\001", $target, $_) if $_;
+   }
 }
 
 sub authenticate {
@@ -348,6 +368,16 @@ sub callhook {
    }
 }
 
+sub chantrim {
+   my $string = shift;
+
+   $string =~ s/[\s+,]/ /g;
+   $string =~ s/^\s+//;
+   $string =~ s/\s+$//;
+
+   return lc($string);
+}
+
 sub checkparams {
    if ($opt_p) {
       if (defined $profiles{$opt_p}) {
@@ -360,6 +390,72 @@ sub checkparams {
    }
    else {
       croak("No profile specified (-p)");
+   }
+}
+
+sub err {
+   my $target = shift;
+   my $string = sprintf(shift, @_);
+
+   msg($target, 'error: %s {::%s}', $string, caller(0)) unless $silent;
+}
+
+sub hlp {
+   my ($target, $string) = @_;
+
+   msg($target, 'help: %s {::%s}', $string, caller(0)) unless $silent;
+}
+
+sub ircgate {
+   my $file = sprintf("$ENV{HOME}/.bot/ircgate/%s", $myprofile);
+
+   if (-e $file) {
+      my $tail = File::Tail->new(name => $file, maxinterval => 1);
+
+      while (defined(my $line = $tail->read)) {
+         my @data = split(' ', $line);
+         my $target = $data[0];
+         my $msg = join(' ', @data[1..$#data]);
+
+         printf("[%s] === ircgate: [%s] %s\n", scalar localtime, $target, $msg);
+         msg($target, $msg) if $msg;
+      }
+   }
+   else {
+      printf("[%s] === ircgate: %s does not exist! ircgate disabled.\n", scalar localtime, $file);
+   }
+}
+
+sub joinchan {
+   my ($chan, $key) = @_;
+
+   $chan = lc($chan);
+
+   if ($key) {
+      raw('JOIN %s %s', $chan, $key) unless exists $mychannels{$myprofile}{$chan};
+   }
+   else {
+      raw('JOIN %s', $chan) unless exists $mychannels{$myprofile}{$chan};
+   }
+}
+
+sub kick {
+   my ($chan, $victim, $reason) = @_;
+   my %uniq;
+
+   $uniq{(split('!', $_))[0]}++ for @myadmins;
+
+   if (exists $uniq{$victim}) {
+      printf("[%s] === Refusing to kick admin [%s] on %s\n", scalar localtime, $victim, $chan);
+
+      return;
+   }
+
+   if ($reason) {
+      raw('KICK %s %s :%s', $chan, $victim, $reason) if exists $mychannels{$myprofile}{$chan};
+   }
+   else {
+      raw('KICK %s %s', $chan, $victim) if exists $mychannels{$myprofile}{$chan};
    }
 }
 
@@ -394,22 +490,22 @@ sub loadmodules {
                   chomp $@;
                   carp("$@");
                   printf("[%s] === Failed to load module [%s]\n", scalar localtime, $_);
-                  utils->err($target, sprintf("[%s] was not loaded due to an unhandled exception, check log", $_)) if ($target && utils->can('err'));
+                  err($target, sprintf("[%s] was not loaded due to an unhandled exception, check log", $_)) if $target;
                }
             }
             else {
                printf("[%s] === Failed to load erroneous module [%s]\n", scalar localtime, $_);
-               utils->err($target, sprintf("[%s] was not loaded because it is erroneous", $_)) if ($target && utils->can('err'));
+               err($target, sprintf("[%s] was not loaded because it is erroneous", $_)) if $target;
             }
          }
          else {
             printf("[%s] === Failed to load non-existing module [%s]\n", scalar localtime, $_);
-            utils->err($target, sprintf("[%s] was not loaded because it does not exist", $_)) if ($target && utils->can('err'));
+            err($target, sprintf("[%s] was not loaded because it does not exist", $_)) if $target;
          }
       }
       else {
           printf("[%s] === Failed to load already loaded module [%s]\n", scalar localtime, $_);
-          utils->err($target, sprintf("[%s] was not loaded because it is already loaded", $_)) if ($target && utils->can('err'));
+          err($target, sprintf("[%s] was not loaded because it is already loaded", $_)) if $target;
       }
    }
 }
@@ -445,11 +541,49 @@ sub israwlog {
    }
 }
 
+sub msg {
+   my $target = shift;
+   my $msg    = sprintf(shift, @_);
+
+   for (split(/\n|(.{$splitlen})/, $msg)) {
+      raw('PRIVMSG %s :%s', $target, $_) if $_;
+   }
+}
+
+sub ntc {
+   my $target = shift;
+   my $ntc    = sprintf(shift, @_);
+
+   for (split(/\n|(.{$splitlen})/, $ntc)) {
+      raw('NOTICE %s :%s', $target, $_) if $_;
+   }
+}
+
+sub partchan {
+   my $chan = shift;
+   
+   raw('PART %s', $chan) if exists $mychannels{$myprofile}{$chan};
+}
+
 sub raw {
    my $raw = sprintf(shift, @_) || return;
 
    printf($socket "%s\r\n", $raw);
    printf("-> %s\n", $raw) if $rawlog;
+}
+
+sub settopic {
+   my ($chan, $text) = @_;
+
+   raw('TOPIC %s :%s', $chan, $text);
+}
+
+sub stripcodes {
+   my $string = shift;
+
+   $string =~ s/[\002\017\026\037]|\003\d?\d?(?:,\d\d?)?//g;
+
+   return $string;
 }
 
 sub unloadmodules {
@@ -464,7 +598,7 @@ sub unloadmodules {
       }
       else {
          printf("[%s] === Can not unload inactive module [%s]\n", scalar localtime, $_);
-         utils->err($target, sprintf("[%s] was not unloaded because it was not active", $_)) if ($target && utils->can('err'));
+         err($target, sprintf("[%s] was not unloaded because it was not active", $_)) if $target;
       }
    }
 }
@@ -543,7 +677,7 @@ sub on_names {
    my ($chan, $names) = @_;
 
    for (split(' ', $names)) {
-      $_ =~ s/[+%@&~]//;
+      $_ =~ s/[+%@&~!*]//;
       $mychannels{$myprofile}{$chan}{$_}++;
    }
 }
@@ -578,7 +712,7 @@ sub on_nickinuse {
 sub on_notice {
    my ($target, $msg, undef, undef, undef, undef, $who) = @_;
 
-   $msg = utils->stripcodes($msg) if (utils->can('stripcodes'));
+   $msg = stripcodes($msg);
 
    if ($auth && $target eq $mynick && $who eq $authservackwho) {
       if ($msg =~ /^$authservackstring/) {
@@ -642,14 +776,14 @@ sub on_privmsg {
                   unless ($authedadmins{$who}) {
                      $authedadmins{$who}++;
                      printf("[%s] *** Admin [%s] successfully authenticated\n", scalar localtime, $who);
-                     utils->ntc($nick, 'Successfully authenticated [%s]', $who) if utils->can('ntc');
+                     ntc($nick, 'Successfully authenticated [%s]', $who);
                   }
                   else {
-                     utils->ntc($nick, 'Already authenticated [%s]', $who) if utils->can('ntc');
+                     ntc($nick, 'Already authenticated [%s]', $who);
                   }
                }
                else {
-                  utils->ntc($nick, 'Wrong password for [%s]', $who) if utils->can('ntc');
+                  ntc($nick, 'Wrong password for [%s]', $who);
                }
             }
          }
@@ -670,21 +804,21 @@ sub on_privmsg {
                }
 
                if ($tolist) {
-                  utils->msg($target, substr($tolist, 0, -2)) if utils->can('msg');
+                  msg($target, substr($tolist, 0, -2));
                }
-               #else {
-               #   utils->msg($target, 'no modules loaded') if utils->can('msg');
-               #}
+               else {
+                  msg($target, 'no modules loaded');
+               }
             }
             elsif ($cargs[0] eq 'LOAD' || $cargs[0] eq 'L') {
                if ($args[1]) {
                   my @toload = @args[1..$#args];
 
                   loadmodules(\@toload, $target);
-                  utils->ack($target) if utils->can('ack');
+                  ack($target);
                }
                else {
-                  utils->err($target, 'syntax: MODULE(MOD) LOAD(L) ALL|<name> [<name>]...') if utils->can('err');
+                  err($target, 'syntax: MODULE(MOD) LOAD(L) ALL|<name> [<name>]...');
                }
             }
             elsif ($cargs[0] eq 'UNLOAD' || $cargs[0] eq 'U') {
@@ -692,10 +826,10 @@ sub on_privmsg {
                   my @toreload = @args[1..$#args];
 
                   unloadmodules(\@toreload, $target);
-                  utils->ack($target) if utils->can('ack');
+                  ack($target);
                }
                else {
-                  utils->err($target, 'syntax: MODULE(MOD) UNLOAD(U) ALL|<name> [<name>]...') if utils->can('err');
+                  err($target, 'syntax: MODULE(MOD) UNLOAD(U) ALL|<name> [<name>]...');
                }
             }
             elsif ($cargs[0] eq 'RELOAD' || $cargs[0] eq 'R') {
@@ -709,30 +843,26 @@ sub on_privmsg {
 
                      unloadmodules(\@toreload, $target);
                      loadmodules(\@toreload, $target);
-                     utils->ack($target) if utils->can('ack');
+                     ack($target);
                   }
                   else {
                      my @toreload = @args[1..$#args];
 
                      unloadmodules(\@toreload, $target);
                      loadmodules(\@toreload, $target);
-                     utils->ack($target) if utils->can('ack');
+                     ack($target);
                   }
                }
                else {
-                  utils->err($target, 'syntax: MODULE(MOD) RELOAD(R) ALL|<name> [<name>]...') if utils->can('err');
+                  err($target, 'syntax: MODULE(MOD) RELOAD(R) ALL|<name> [<name>]...');
                }
             }
             elsif ($cargs[0] eq 'HELP') {
-               if (utils->can('hlp')) {
-                  utils->hlp($target, $_) for (@syntax);
-               }
+               hlp($target, $_) for (@syntax);
             }
          }
          elsif (!$args[0]) {
-            if (utils->can('hlp')) {
-               utils->err($target, $_) for (@syntax);
-            }
+            err($target, $_) for (@syntax);
          }
       }
    }
