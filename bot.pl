@@ -32,7 +32,6 @@ my $myprofile; # -p overrides
 # settings (defaults)
 my $rawlog       = 0;
 my $silent       = 0; 
-my $logtodb      = 0;
 my $public       = 1;
 my $rejoinonkick = 1;
 my $splitlen     = 400;
@@ -415,10 +414,24 @@ sub ircgate {
       while (defined(my $line = $tail->read)) {
          my @data = split(' ', $line);
          my $target = $data[0];
-         my $msg = join(' ', @data[1..$#data]);
 
-         printf("[%s] === ircgate: [%s] %s\n", scalar localtime, $target, $msg);
-         msg($target, $msg) if $msg;
+         if (substr($target, 0, 1) eq '=') {
+            my $gatemod = substr($target, 1);
+            my $gatesub = $data[1];
+
+            if ($gatesub) {
+               printf("[%s] === ircgate: module [%s] got: %s\n", scalar localtime, $gatemod, join(' ', @data[2..$#data]));
+               $gatemod->$gatesub(@data[2..$#data]) if $gatemod->can($gatesub);
+            }
+         }
+         else {
+            my $msg = join(' ', @data[1..$#data]);
+
+            if ($msg) {
+               printf("[%s] === ircgate: msg [%s] %s\n", scalar localtime, $target, $msg);
+               msg($target, $msg);
+            }
+         }
       }
    }
    else {
