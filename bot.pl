@@ -36,6 +36,7 @@ my $silent       = 0;
 my $public       = 1;
 my $rejoinonkick = 1;
 my $splitlen     = 400;
+my $ircgatedir   = '/usr/home/k/ircgate_nico'; # no tailing /
 my $useoident    = 1;
 my $mytrigger    = '!';
 my $myaddr4      = '127.0.0.1';
@@ -98,7 +99,7 @@ checkparams();
 
 my $myuser            = $profiles{$myprofile}{user}        || $defaultuser;
 my $myuserinfo        = $profiles{$myprofile}{userinfo}    || $mynick;
-my $myaltnick         = $profiles{$myprofile}{altnick}     || sprintf("[%s]", $mynick);
+my $myaltnick         = $profiles{$myprofile}{altnick}     || "[$mynick]";
 my $authaltnick       = $profiles{$myprofile}{authaltnick} || 0;
 my $mydefumode        = $profiles{$myprofile}{umode}       || 0;
 my $ipv6              = $profiles{$myprofile}{ipv6}        || 0;
@@ -407,9 +408,11 @@ sub hlp {
 }
 
 sub ircgate {
-   my $file = sprintf("$ENV{HOME}/.bot/ircgate/%s", $myprofile);
+   my $file = "$ircgatedir/$myprofile";
 
    if (-e $file) {
+      printf("[%s] === ircgate: available!\n", scalar localtime);
+
       my $tail = File::Tail->new(name => $file, maxinterval => 1);
 
       while (defined(my $line = $tail->read)) {
@@ -421,8 +424,9 @@ sub ircgate {
             my $gatesub = $data[1];
 
             if ($gatesub) {
-               printf("[%s] === ircgate: module [%s] %s(%s)\n", scalar localtime, $gatemod, $gatesub, join(' ', @data[2..$#data]));
-               $gatemod->$gatesub(@data[2..$#data]) if $gatemod->can($gatesub);
+               splice(@data, 0, 2);
+               printf("[%s] === ircgate: module [%s] %s(%s)\n", scalar localtime, $gatemod, $gatesub, join(' ', @data));
+               $gatemod->$gatesub(@data) if $gatemod->can($gatesub);
             }
          }
          else {
@@ -480,11 +484,11 @@ sub loadmodules {
       printf("[%s] === Loading module [%s]\n", scalar localtime, $_);
 
       unless (exists $modules{$_}) {
-         my $modpath = sprintf("modules/%s.pm", $_);
+         my $modpath = "modules/$_.pm";
 
          if (-e $modpath) {
-            unless (system(sprintf("/usr/bin/env perl -c %s > /dev/null 2>&1", $modpath))) {
-               eval { require sprintf("modules/%s.pm", $_) };
+            unless (system("/usr/bin/env perl -c $modpath > /dev/null 2>&1")) {
+               eval { require "modules/$_.pm" };
 
                unless ($@) {
                   $modules{$_} = $_->new(
@@ -505,22 +509,22 @@ sub loadmodules {
                   chomp $@;
                   carp("$@");
                   printf("[%s] === Failed to load module [%s]\n", scalar localtime, $_);
-                  err($target, sprintf("[%s] was not loaded due to an unhandled exception, check log", $_)) if $target;
+                  err($target, "[$_] was not loaded due to an unhandled exception, check log") if $target;
                }
             }
             else {
                printf("[%s] === Failed to load erroneous module [%s]\n", scalar localtime, $_);
-               err($target, sprintf("[%s] was not loaded because it is erroneous", $_)) if $target;
+               err($target, "[$_] was not loaded because it is erroneous") if $target;
             }
          }
          else {
             printf("[%s] === Failed to load non-existing module [%s]\n", scalar localtime, $_);
-            err($target, sprintf("[%s] was not loaded because it does not exist", $_)) if $target;
+            err($target, "[$_] was not loaded because it does not exist") if $target;
          }
       }
       else {
           printf("[%s] === Failed to load already loaded module [%s]\n", scalar localtime, $_);
-          err($target, sprintf("[%s] was not loaded because it is already loaded", $_)) if $target;
+          err($target, "[$_] was not loaded because it is already loaded") if $target;
       }
    }
 }
@@ -608,12 +612,12 @@ sub unloadmodules {
       if (exists $modules{$_}) {
          $_->on_unload if $_->can('on_unload');
          printf("[%s] === Unloading module [%s]\n", scalar localtime, $_);
-         $refresher->unload_module(sprintf("modules/%s.pm", $_));
+         $refresher->unload_module("modules/$_.pm");
          delete $modules{$_};
       }
       else {
          printf("[%s] === Can not unload inactive module [%s]\n", scalar localtime, $_);
-         err($target, sprintf("[%s] was not unloaded because it was not active", $_)) if $target;
+         err($target, "[$_] was not unloaded because it was not active") if $target;
       }
    }
 }
@@ -815,7 +819,7 @@ sub on_privmsg {
                my $tolist;
 
                for (keys(%modules)) {
-                  $tolist .= sprintf("%s, ", $_);
+                  $tolist .= "$_, ";
                }
 
                if ($tolist) {
