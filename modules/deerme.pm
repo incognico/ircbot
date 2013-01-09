@@ -109,9 +109,6 @@ sub on_privmsg {
 
       $target = $nick unless $ischan;
 
-      # admin cmds
-      return unless main::isadmin($who);
-
       if ($cmd eq 'DEER') {
          if ($args[0]) {
             my ($creator, $irccode, $deer, $special) = fetchdrawing($args[0]);
