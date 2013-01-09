@@ -47,7 +47,7 @@ sub mysql_disconnect {
    $dbh->disconnect;
 }
 
-sub fetchdrawing {
+sub fetchdeer {
    my $deer = shift || return;
    my ($special, $creator, $sqlout);
 
@@ -111,7 +111,7 @@ sub on_privmsg {
 
       if ($cmd eq 'DEER') {
          if ($args[0]) {
-            my ($creator, $irccode, $deer, $special) = fetchdrawing($args[0]);
+            my ($creator, $irccode, $deer, $special) = fetchdeer($args[0]);
 
             if ($creator) {
                main::msg($target, $irccode);
