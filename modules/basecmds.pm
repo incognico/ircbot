@@ -7,7 +7,6 @@ use warnings;
 use Data::Dumper;
 
 my $channels;
-my $logtodb;
 my $myadmins;
 my $mychannels;
 my $myhelptext;
@@ -24,7 +23,6 @@ sub new {
    my $self = bless(\%self, $package);
 
    $channels   = $self->{channels};
-   $logtodb    = $self->{logtodb};
    $myadmins   = $self->{myadmins};
    $mychannels = $self->{mychannels};
    $myhelptext = $self->{myhelptext};
