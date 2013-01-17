@@ -493,7 +493,6 @@ sub loadmodules {
                unless ($@) {
                   $modules{$_} = $_->new(
                      channels      => \%channels,
-                     logtodb       => \$logtodb,
                      myadmins      => \@myadmins,
                      mychannels    => \%mychannels,
                      myhelptext    => \$myhelptext,
