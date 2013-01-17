@@ -97,15 +97,15 @@ checkparams();
  my $authservackstring = $profiles{$myprofile}{authservackstring};
  my $mypass            = $profiles{$myprofile}{pass};
 
-my $myuser            = $profiles{$myprofile}{user}        || $defaultuser;
-my $myuserinfo        = $profiles{$myprofile}{userinfo}    || $mynick;
-my $myaltnick         = $profiles{$myprofile}{altnick}     || "[$mynick]";
-my $authaltnick       = $profiles{$myprofile}{authaltnick} || 0;
-my $mydefumode        = $profiles{$myprofile}{umode}       || 0;
-my $ipv6              = $profiles{$myprofile}{ipv6}        || 0;
-my $ssl               = $profiles{$myprofile}{ssl}         || 0;
-my $auth              = $profiles{$myprofile}{auth}        || 0;
-my @mychantypes       = defined @{$profiles{$myprofile}{chantypes}} ? @{$profiles{$myprofile}{chantypes}} : qw(#);
+my $myuser      = $profiles{$myprofile}{user}        || $defaultuser;
+my $myuserinfo  = $profiles{$myprofile}{userinfo}    || $mynick;
+my $myaltnick   = $profiles{$myprofile}{altnick}     || "[$mynick]";
+my $authaltnick = $profiles{$myprofile}{authaltnick} || 0;
+my $mydefumode  = $profiles{$myprofile}{umode}       || 0;
+my $ipv6        = $profiles{$myprofile}{ipv6}        || 0;
+my $ssl         = $profiles{$myprofile}{ssl}         || 0;
+my $auth        = $profiles{$myprofile}{auth}        || 0;
+my @mychantypes = defined @{$profiles{$myprofile}{chantypes}} ? @{$profiles{$myprofile}{chantypes}} : qw(#);
 
 $myaddr4      = $profiles{$myprofile}{addr4}        if defined $profiles{$myprofile}{addr4};
 $myaddr6      = $profiles{$myprofile}{addr6}        if defined $profiles{$myprofile}{addr6};
@@ -195,7 +195,7 @@ while (my @raw = split(' ', <$socket>)) {
    local $/ = "\r\n";
 
    chomp(@raw);
-   printf("<- %s\n", "@raw") if $rawlog;
+   print("<- @raw\n") if $rawlog;
 
    local $/ = "\n";
 
@@ -287,7 +287,7 @@ unless ($connected) {
 }
 else {
    printf("[%s] *** %s: dirty exit\nLast raw lines:\n", scalar localtime, $mynick) unless $rawlog;
-   printf("<- %s\n", $_) for @lastraw;
+   print("<- $_\n") for @lastraw;
 }
 
 ### functions
@@ -318,7 +318,7 @@ sub act {
    my $act    = sprintf(shift, @_);
 
    for (split(/\n|(.{$splitlen})/, $act)) {
-      raw("PRIVMSG %s :\001ACTION %s\001", $target, $_) if $_;
+      raw("PRIVMSG %s :\001ACTION %s\001", $target, $_) if (defined $_);
    }
 }
 
@@ -565,7 +565,7 @@ sub msg {
    my $msg    = sprintf(shift, @_);
 
    for (split(/\n|(.{$splitlen})/, $msg)) {
-      raw('PRIVMSG %s :%s', $target, $_) if $_;
+      raw('PRIVMSG %s :%s', $target, $_) if (defined $_);
    }
 }
 
@@ -574,7 +574,7 @@ sub ntc {
    my $ntc    = sprintf(shift, @_);
 
    for (split(/\n|(.{$splitlen})/, $ntc)) {
-      raw('NOTICE %s :%s', $target, $_) if $_;
+      raw('NOTICE %s :%s', $target, $_) if (defined $_);
    }
 }
 
@@ -587,8 +587,8 @@ sub partchan {
 sub raw {
    my $raw = sprintf(shift, @_) || return;
 
-   printf($socket "%s\r\n", $raw);
-   printf("-> %s\n", $raw) if $rawlog;
+   print($socket "$raw\r\n");
+   print("-> $raw\n") if $rawlog;
 }
 
 sub settopic {

@@ -4,12 +4,16 @@ use utf8;
 use strict;
 use warnings;
 
+my $mychannels;
+
 ### functions
 
 sub new {
    my ($package, %self) = @_;
    my $self = bless(\%self, $package);
    
+   $mychannels = $self->{mychannels};
+
    return $self;
 }
 
@@ -18,11 +22,12 @@ sub new {
 sub on_privmsg {
    my ($self, $target, $msg, $ischan, $nick, undef, undef, undef) = @_;
   
+   # cmds
    if ($msg =~ /^((?:\[\s\]\s[^\[\]]+\s?)+)/) {
       my (@x, $y);
 
       $msg =~ s/(\[\s\]\s[^\[\]]+)+?\s?/push @x,$1/eg;
-      $x[int(rand($#x+1))] =~ s/\[\s\]/[x]/;
+      $x[int(rand(@x))] =~ s/\[\s\]/[x]/;
 
       if ($ischan) {
          main::msg($target, "$nick: @x");

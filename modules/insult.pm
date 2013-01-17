@@ -9,9 +9,9 @@ my $mynick;
 my $myprofile;
 my $mytrigger;
 
+my %insulters;
 my @words1;
 my @words2;
-my %insulters;
 
 ### start config ###
 

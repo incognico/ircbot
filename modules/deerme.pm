@@ -15,13 +15,13 @@ my %prevdeers;
 
 ### start config ###
 
-my $deeritor = 'http://derp.in/deeritor';
+my $deeritor = 'http://example.com/deeritor';
 
 my %sql = (
    host  => '',
-   db    => 'deer',
-   table => 'deer',
-   user  => 'deerkins',
+   db    => '',
+   table => '',
+   user  => '',
    pass  => '',
 );
 
@@ -53,15 +53,16 @@ sub fetchdeer {
 
    eval {
       my $sql = SQL::Abstract::Limit->new(limit_dialect => 'LimitXY');
+      my $ucdeer = uc($deer);
       my ($stmt, @bind);
 
       mysql_connect();
 
-      if (uc($deer) eq 'RANDOM') {
+      if ($ucdeer eq 'RANDOM') {
          $special = 1;
          ($stmt, @bind) = $sql->select($sql{table}, 'creator,irccode,deer', {}, \'RAND() DESC', 1);
       }
-      elsif (uc($deer) eq 'LATEST') {
+      elsif ($ucdeer eq 'LATEST') {
          $special = 1;
          ($stmt, @bind) = $sql->select($sql{table}, 'creator,irccode,deer', {}, \'date DESC', 1);
       }
@@ -101,35 +102,27 @@ sub fetchdeer {
 ### hooks
 
 sub on_privmsg {
-   my ($self, $target, $msg, $ischan, $nick, undef, undef, $who) = @_;
+   my ($self, $target, $msg, $ischan, $nick, undef, undef, undef) = @_;
 
-   if (substr($msg, 0, 1) eq $$mytrigger) {
-      my @args = split(' ', $msg);
-      my $cmd = uc(substr(shift(@args), 1));
+   # cmds
+   if ($msg =~ /^deer (.+)/) {
+      my ($creator, $irccode, $deer, $special) = fetchdeer($1);
 
-      $target = $nick unless $ischan;
+      if ($creator) {
+         main::msg($target, $irccode);
+         main::msg($target, "$deer by $creator") if $special;
 
-      if ($cmd eq 'DEER') {
-         if ($args[0]) {
-            my ($creator, $irccode, $deer, $special) = fetchdeer($args[0]);
+         $prevdeers{$target}{deer} = $deer;
+         $prevdeers{$target}{creator} = $creator;
 
-            if ($creator) {
-               main::msg($target, $irccode);
-               main::msg($target, "$deer by $creator") if $special;
-
-               $prevdeers{$target}{deer} = $deer;
-               $prevdeers{$target}{creator} = $creator;
-
-               printf("[%s] === modules::%s: Deer [%s] on %s for %s\n", scalar localtime, __PACKAGE__, $args[0], $target, $nick) unless main::israwlog();
-            }
-            else {
-               main::msg($target, "404 Deer Not Found. Go to $deeritor and create it.");
-            }
-         }
+         printf("[%s] === modules::%s: Deer [%s] on %s for %s\n", scalar localtime, __PACKAGE__, $1, $target, $nick) unless main::israwlog();
       }
-      elsif ($cmd eq 'PREVDEER') {
-         main::msg($target, "The previous deer to walk the earth was $prevdeers{$target}{deer} by $prevdeers{$target}{creator}") if exists $prevdeers{$target};
+      else {
+         main::msg($target, "404 Deer Not Found. Go to $deeritor and create it.");
       }
+   }
+   elsif (lc($msg) eq "$$mytrigger prevdeer") {
+      main::msg($target, "The previous deer to walk the earth was $prevdeers{$target}{deer} by $prevdeers{$target}{creator}") if exists $prevdeers{$target};
    }
 }
 

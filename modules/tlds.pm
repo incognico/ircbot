@@ -15,7 +15,7 @@ my %tlds;
 # https://github.com/nwohlgem/list-of-top-level-domains/raw/master/tlds.csv
 my $csv = sprintf("$ENV{HOME}/.bot/%s/%s.csv", __PACKAGE__, __PACKAGE__);
 
-### end config ###
+### end config
 
 if (-e $csv) {
    open my $fh, '<:encoding(UTF-8)', $csv || croak $!;
@@ -33,7 +33,7 @@ sub new {
    my ($package, %self) = @_;
    my $self = bless(\%self, $package);
 
-   $mytrigger     = $self->{mytrigger};
+   $mytrigger = $self->{mytrigger};
 
    return $self;
 }
@@ -58,7 +58,7 @@ sub on_privmsg {
                main::msg($target, '.%s: %s', $tld, $tlds{$tld});
             }
             else {
-               main::err($target, 'not found');
+               main::msg($target, 'not found');
             }
          }
          else {

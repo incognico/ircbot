@@ -8,11 +8,11 @@ my $mytrigger;
 
 my @curses;
 
-### start config ###
+### start config
 
 my $file = sprintf("$ENV{HOME}/.bot/%s/%ss.txt", __PACKAGE__, __PACKAGE__);
 
-### end config ###
+### end config
 
 if (-e $file) {
    open my $fh, '<:encoding(UTF-8)', $file || die $!;
@@ -24,10 +24,6 @@ if (-e $file) {
 }
 
 ### functions
-
-sub curse {
-   return $curses[int(rand(@curses))];
-}
 
 sub new {
    my ($package, %self) = @_;
@@ -51,7 +47,10 @@ sub on_privmsg {
 
       # cmds
       if ($cmd eq 'CURSE') {
-         main::msg($target, '%s %s %s', curse(), curse(), curse());
+         my $text;
+
+         $text .= $curses[int(rand(@curses))] . ' ' for 1..3;
+         main::msg($target, $text);
       }
    }
 }

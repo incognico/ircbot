@@ -20,11 +20,11 @@ my $count = 0;
 my %invitechannels;
 my %recentkickchannels;
 
-### start config ###
+### start config
 
 my $cfgname = "$ENV{HOME}/.bot/%s/%s.yml"; # package name, profile name
 
-### end config ###
+### end config
 
 ### functions
 

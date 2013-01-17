@@ -1,12 +1,13 @@
 package basecmds;
 
-use Data::Dumper;
-
 use utf8;
 use strict;
 use warnings;
 
+use Data::Dumper;
+
 my $channels;
+my $logtodb;
 my $myadmins;
 my $mychannels;
 my $myhelptext;
@@ -22,15 +23,16 @@ sub new {
    my ($package, %self) = @_;
    my $self = bless(\%self, $package);
 
-   $channels      = $self->{channels};
-   $myadmins      = $self->{myadmins};
-   $mychannels    = $self->{mychannels};
-   $myhelptext    = $self->{myhelptext};
-   $myprofile     = $self->{myprofile};
-   $mytrigger     = $self->{mytrigger};
-   $mynick        = $self->{mynick};
-   $rawlog        = $self->{rawlog};
-   $silent        = $self->{silent};
+   $channels   = $self->{channels};
+   $logtodb    = $self->{logtodb};
+   $myadmins   = $self->{myadmins};
+   $mychannels = $self->{mychannels};
+   $myhelptext = $self->{myhelptext};
+   $myprofile  = $self->{myprofile};
+   $mytrigger  = $self->{mytrigger};
+   $mynick     = $self->{mynick};
+   $rawlog     = $self->{rawlog};
+   $silent     = $self->{silent};
 
    return $self;
 }
@@ -51,14 +53,6 @@ sub on_privmsg {
       # cmds
       if ($cmd eq 'HELP') {
          main::msg($target, $$myhelptext) if $$myhelptext;
-      }
-      elsif ($cmd eq 'SPAST') {
-         if ($args[0]) {
-            main::msg($target, 'http://spa.st/%s', $args[0]);
-         }
-         else {
-            main::msg($target, 'http://spa.st/%s', $nick);
-         }
       }
 
       # admin cmds
