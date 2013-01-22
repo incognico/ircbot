@@ -13,6 +13,7 @@ my $myhelptext;
 my $mynick;
 my $myprofile;
 my $mytrigger;
+my $public;
 my $rawlog;
 my $silent;
 
@@ -29,6 +30,7 @@ sub new {
    $myprofile  = $self->{myprofile};
    $mytrigger  = $self->{mytrigger};
    $mynick     = $self->{mynick};
+   $public     = $self->{public};
    $rawlog     = $self->{rawlog};
    $silent     = $self->{silent};
 

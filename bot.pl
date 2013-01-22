@@ -85,7 +85,7 @@ my %channels = (
    },
 );
 
-### end config ###
+### end config
 
 checkparams();
 
@@ -105,7 +105,7 @@ my $mydefumode  = $profiles{$myprofile}{umode}       || 0;
 my $ipv6        = $profiles{$myprofile}{ipv6}        || 0;
 my $ssl         = $profiles{$myprofile}{ssl}         || 0;
 my $auth        = $profiles{$myprofile}{auth}        || 0;
-my @mychantypes = defined @{$profiles{$myprofile}{chantypes}} ? @{$profiles{$myprofile}{chantypes}} : qw(#);
+my @mychantypes = defined @{$profiles{$myprofile}{chantypes}} ? @{$profiles{$myprofile}{chantypes}} : qw(# &);
 
 $myaddr4      = $profiles{$myprofile}{addr4}        if defined $profiles{$myprofile}{addr4};
 $myaddr6      = $profiles{$myprofile}{addr6}        if defined $profiles{$myprofile}{addr6};
@@ -256,6 +256,10 @@ while (my @raw = split(' ', <$socket>)) {
             # chan, names
          }
       }
+      when ('366') {
+         callhook('on_synced', lc($raw[3]));
+         # chan
+      }
       when ('718') {
          callhook('on_umodeg', (split(/\[/, $raw[3]))[0]);
          # nick
@@ -357,6 +361,7 @@ sub callhook {
       on_ping      => \&on_ping,
       on_privmsg   => \&on_privmsg,
       on_quit      => \&on_quit,
+      on_synced    => \&on_synced,
       on_umodeg    => \&on_umodeg,
    );
 
@@ -450,10 +455,10 @@ sub joinchan {
    $chan = lc($chan);
 
    if ($key) {
-      raw('JOIN %s %s', $chan, $key) unless exists $mychannels{$myprofile}{$chan};
+      raw('JOIN %s %s', $chan, $key);
    }
    else {
-      raw('JOIN %s', $chan) unless exists $mychannels{$myprofile}{$chan};
+      raw('JOIN %s', $chan);
    }
 }
 
@@ -470,10 +475,10 @@ sub kick {
    }
 
    if ($reason) {
-      raw('KICK %s %s :%s', $chan, $victim, $reason) if exists $mychannels{$myprofile}{$chan};
+      raw('KICK %s %s :%s', $chan, $victim, $reason);
    }
    else {
-      raw('KICK %s %s', $chan, $victim) if exists $mychannels{$myprofile}{$chan};
+      raw('KICK %s %s', $chan, $victim);
    }
 }
 
@@ -578,9 +583,14 @@ sub ntc {
 }
 
 sub partchan {
-   my $chan = shift;
+   my ($chan, $reason) = @_;
    
-   raw('PART %s', $chan) if exists $mychannels{$myprofile}{$chan};
+   if ($reason) {
+      raw('PART %s :%s', $chan, $reason);
+   }
+   else {
+      raw('PART %s', $chan);
+   }
 }
 
 sub raw {

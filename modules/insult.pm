@@ -13,12 +13,12 @@ my %insulters;
 my @words1;
 my @words2;
 
-### start config ###
+### start config
 
 my $file1 = sprintf("$ENV{HOME}/.bot/%s/words1.txt", __PACKAGE__);
 my $file2 = sprintf("$ENV{HOME}/.bot/%s/words2.txt", __PACKAGE__);
 
-### end config ###
+### end config
 
 if (-e $file1) {
    open my $fh1, '<:encoding(UTF-8)', $file1 || die $!;

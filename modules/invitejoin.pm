@@ -17,12 +17,14 @@ my $public;
 my $cfg;
 my $changed = 0;
 my $count = 0;
+my %antiflood;
 my %invitechannels;
 my %recentkickchannels;
 
 ### start config
 
-my $cfgname = "$ENV{HOME}/.bot/%s/%s.yml"; # package name, profile name
+my $cfgname  = "$ENV{HOME}/.bot/%s/%s.yml"; # package name, profile name
+my $minusers = 10;
 
 ### end config
 
@@ -57,26 +59,31 @@ sub autojoin {
    }
 }
 
-sub loadcfg {
-   printf("[%s] === modules::%s: Loading config: %s\n", scalar localtime, __PACKAGE__, $cfg);
-   %invitechannels = LoadFile($cfg);
-}
+sub checksize {
+   my $chan = shift || return;
 
-sub maintenance {
-   for (keys(%{$invitechannels{joinlist}{$$myprofile}})) {
-      if (scalar keys %{$mychannels->{$$myprofile}{$_}} <= 5) {
-         main::partchan($_);
-         $recentkickchannels{$$myprofile}{$_} = 'my own maintenance routine (channel too small)';
-         delete $invitechannels{joinlist}{$$myprofile}{$_};
+   if (exists $invitechannels{joinlist}{$$myprofile}{$chan} && exists $mychannels->{$$myprofile}{$chan}) {
+      if (scalar keys %{$mychannels->{$$myprofile}{$chan}} < $minusers) {
+         printf("[%s] === modules::%s: Channel [%s] does not qualify\n", scalar localtime, __PACKAGE__, $chan);
+         main::partchan($chan, 'channel does not qualify');
+         $recentkickchannels{$$myprofile}{$chan} = 'myself (channel does not qualify)';
+         delete $invitechannels{joinlist}{$$myprofile}{$chan};
          $changed = 1;
       }
    }
 }
 
+sub loadcfg {
+   printf("[%s] === modules::%s: Loading config: %s\n", scalar localtime, __PACKAGE__, $cfg);
+   %invitechannels = LoadFile($cfg);
+}
+
 sub savecfg {
-   printf("[%s] === modules::%s: Saving config: %s\n", scalar localtime, __PACKAGE__, $cfg);
-   DumpFile($cfg, %invitechannels);
-   $changed = 0;
+   if ($changed) {
+      printf("[%s] === modules::%s: Saving config: %s\n", scalar localtime, __PACKAGE__, $cfg);
+      DumpFile($cfg, %invitechannels);
+      $changed = 0;
+   }
 }
 
 ### hooks
@@ -103,11 +110,23 @@ sub on_invite {
                $changed = 1;
             }
             else {
-               main::ntc($nick, 'I was just kicked from %s by %s, please try again later.', $chan, $recentkickchannels{$$myprofile}{$chan});
+               unless (exists $antiflood{$$myprofile}{$nick}) {
+                  main::ntc($nick, 'I was just removed from %s by %s, please try again later.', $chan, $recentkickchannels{$$myprofile}{$chan});
+                  $antiflood{$$myprofile}{$nick}++;
+               }
+               else {
+                  return;
+               }
             }
          }
          else {
-            main::ntc($nick, '%s is blacklisted.', $chan);
+            unless (exists $antiflood{$$myprofile}{$nick}) {
+               main::ntc($nick, '%s is blacklisted.', $chan);
+               $antiflood{$$myprofile}{$nick}++;
+            }
+            else {
+               return;
+            }
          }
       }
       else {
@@ -140,16 +159,21 @@ sub on_ownpart {
 }
 
 sub on_ping {
-   delete $recentkickchannels{$$myprofile};
-   savecfg() if $changed;
+   delete $antiflood{$$myprofile};
 
-   if ($count >= 5) {
+   if ($count >= 10) {
       $count = 0;
-      maintenance();
+      delete $recentkickchannels{$$myprofile};
+
+      for (keys(%{$invitechannels{joinlist}{$$myprofile}})) {
+         checksize($_);
+      }
    }
    else {
       $count++;
    }
+
+   savecfg();
 }
 
 sub on_privmsg {
@@ -216,7 +240,9 @@ sub on_privmsg {
                      $chans .= sprintf("%s, ", $_);
                   }
 
-                  main::msg($target, substr($chans, 0, -2));
+                  if ($count > 0) {
+                     main::msg($target, substr($chans, 0, -2));
+                  }
                }
                else {
                   main::err($target, 'syntax: LIST(LS) INVITECHANNELS(INVCHANS) [VERBOSE(V)]');
@@ -339,6 +365,12 @@ sub on_privmsg {
          }
       }
    }
+}
+
+sub on_synced {
+   my ($self, $chan) = @_;
+
+   checksize($chan);
 }
 
 sub on_unload {

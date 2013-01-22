@@ -13,12 +13,12 @@ my $rawlog;
 
 my @yiffs;
 
-### start config ###
+### start config
 
 my $file       = sprintf("$ENV{HOME}/.bot/%s/%ss.txt", __PACKAGE__, __PACKAGE__);
 my $percentage = 0.2; # 0.25 = 25%
 
-### end config ###
+### end config
 
 if (-e $file) {
    open my $fh, '<:encoding(UTF-8)', $file || die $!;

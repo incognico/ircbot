@@ -13,7 +13,7 @@ my $mytrigger;
 my $dbh;
 my %prevdeers;
 
-### start config ###
+### start config
 
 my $deeritor = 'http://example.com/deeritor';
 
@@ -25,7 +25,7 @@ my %sql = (
    pass  => '',
 );
 
-### end config ###
+### end config
 
 ### functions
 
@@ -110,19 +110,19 @@ sub on_privmsg {
 
       if ($creator) {
          main::msg($target, $irccode);
-         main::msg($target, "$deer by $creator") if $special;
+         main::msg($target, '%s by %s', $deer, $creator) if $special;
 
-         $prevdeers{$target}{deer} = $deer;
+         $prevdeers{$target}{deer}    = $deer;
          $prevdeers{$target}{creator} = $creator;
 
          printf("[%s] === modules::%s: Deer [%s] on %s for %s\n", scalar localtime, __PACKAGE__, $1, $target, $nick) unless main::israwlog();
       }
       else {
-         main::msg($target, "404 Deer Not Found. Go to $deeritor and create it.");
+         main::msg($target, '404 Deer Not Found. Go to %s and create it.', $deeritor);
       }
    }
    elsif (lc($msg) eq "$$mytrigger prevdeer") {
-      main::msg($target, "The previous deer to walk the earth was $prevdeers{$target}{deer} by $prevdeers{$target}{creator}") if exists $prevdeers{$target};
+      main::msg($target, 'The previous deer to walk the earth was %s by %s', $prevdeers{$target}{deer}, $prevdeers{$target}{creator}) if exists $prevdeers{$target};
    }
 }
 
