@@ -1,10 +1,5 @@
 #!/usr/bin/env perl
 
-# TODO:
-# - Reduce complexity (rewrite this piece of crap lol)
-# - Track usermodes
-# - Use Carp in modules
-
 # ./bot.pl -p <profile name>
 # 
 # Copyright 2012, Nico R. Wohlgemuth <nico@lifeisabug.com>
@@ -12,10 +7,11 @@
 use utf8;
 use strict;
 use warnings;
-use threads;
-use threads::shared;
 use feature 'switch';
 use sigtrap 'handler', \&quit, 'INT';
+
+use threads;
+use threads::shared;
 
 no warnings 'qw';
 
@@ -28,7 +24,7 @@ our $opt_p;
 getopt('p');
 my $myprofile; # -p overrides
 
-### start config ###
+### start config
 
 # settings (defaults)
 my $rawlog       = 0;
@@ -120,7 +116,6 @@ $rejoinonkick = $profiles{$myprofile}{rejoinonkick} if defined $profiles{$myprof
 $silent       = $profiles{$myprofile}{silent}       if defined $profiles{$myprofile}{silent};
 
 my %authedadmins;
-
 my %mychannels;
 my %myumodes;
 
@@ -161,13 +156,14 @@ else {
 }
 
 ### modules
+
 my %modules;
+my $refresher = Module::Refresh->new;
 
 loadmodules(\@mymodules);
 
-my $refresher = Module::Refresh->new;
-
 ### connection
+
 my @lastraw;
 my $connected :shared = 0;
 my $nicktries = 0;
@@ -480,7 +476,6 @@ sub kick {
 
    if (exists $uniq{$victim}) {
       printf("[%s] === Refusing to kick admin [%s] on %s\n", scalar localtime, $victim, $chan);
-
       return;
    }
 
@@ -620,8 +615,8 @@ sub unloadmodules {
 
    for (@$tounload) {
       if (exists $modules{$_}) {
-         $_->on_unload if $_->can('on_unload');
          printf("[%s] === Unloading module [%s]\n", scalar localtime, $_);
+         $_->on_unload if $_->can('on_unload');
          $refresher->unload_module("modules/$_.pm");
          delete $modules{$_};
       }

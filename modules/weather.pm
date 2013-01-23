@@ -165,4 +165,8 @@ sub on_privmsg {
    }
 }
 
+sub on_unload {
+   savecfg();
+}
+
 1;
