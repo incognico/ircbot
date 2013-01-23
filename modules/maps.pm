@@ -37,6 +37,7 @@ sub on_privmsg {
             my $loc = $geo->geocode(location => "@args");
 
             if ($loc) {
+               printf("[%s] === modules::%s: Maps [%s] on %s by %s\n", scalar localtime, __PACKAGE__, $loc->{formatted_address}, $target, $nick);
                main::msg($target, '%s: https://maps.google.com/maps?q=%s,%s&t=h&z=14', $loc->{formatted_address}, $loc->{geometry}{location}{lat}, $loc->{geometry}{location}{lng});
             }
             else {

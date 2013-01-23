@@ -85,7 +85,7 @@ sub on_privmsg {
             mysql_disconnect();
 
             if (@$result) {
-               printf("[%s] === modules::%s: deers queried [%s] on %s by %s\n", scalar localtime, __PACKAGE__, $args[0], $target, $nick) unless main::israwlog();
+               printf("[%s] === modules::%s: deers queried [%s] on %s by %s\n", scalar localtime, __PACKAGE__, $args[0], $target, $nick);
 
                my $count = scalar(@$result);
                my $output;

@@ -287,11 +287,14 @@ while (my @raw = split(' ', <$socket>)) {
 callhook('on_ownquit');
 
 unless ($connected) {
-   printf("[%s] *** %s: clean exit\n", scalar localtime, $mynick) unless $rawlog;
+   printf("[%s] *** %s: clean exit\n", scalar localtime, $mynick);
 }
 else {
-   printf("[%s] *** %s: dirty exit\nLast raw lines:\n", scalar localtime, $mynick) unless $rawlog;
-   print("<- $_\n") for @lastraw;
+   printf("[%s] *** %s: dirty exit\n", scalar localtime, $mynick);
+
+   unless ($rawlog) {
+      print("<- $_\n") for @lastraw;
+   }
 }
 
 ### functions
@@ -308,7 +311,7 @@ sub acceptuser {
 
    raw('ACCEPT %s', $nick);
    raw('ACCEPT +%s', $nick);
-   printf("[%s] *** Accepted %s\n", scalar localtime, $nick) unless $rawlog;
+   printf("[%s] *** Accepted %s\n", scalar localtime, $nick);
 }
 
 sub ack {
@@ -562,15 +565,6 @@ sub ischan {
    }
 }
 
-sub israwlog {
-   if ($rawlog) {
-      return 1;
-   }
-   else {
-      return 0;
-   }
-}
-
 sub msg {
    my $target = shift;
    my $msg    = sprintf(shift, @_);
@@ -646,7 +640,7 @@ sub quit {
 #### main hooks
 
 sub on_connected {
-   printf("[%s] *** Connected to %s:%d [IPv6: %d, SSL: %d] as \"%s\"\n", scalar localtime, $server, $port, $ipv6, $ssl, $mynick) unless $rawlog;
+   printf("[%s] *** Connected to %s:%d [IPv6: %d, SSL: %d] as \"%s\"\n", scalar localtime, $server, $port, $ipv6, $ssl, $mynick);
    $connected = 1;
    raw('MODE %s %s', $mynick, $mydefumode) if $mydefumode;
 
@@ -691,7 +685,7 @@ sub on_mode {
    my ($target, $ischan, $mode) = @_;
 
    unless ($ischan) {
-      printf("[%s] *** Mode change [%s] for user %s\n", scalar localtime, $mode, $target) unless $rawlog;
+      printf("[%s] *** Mode change [%s] for user %s\n", scalar localtime, $mode, $target);
 
       if ($target eq $mynick) {
          if (substr($mode, 0, 1) eq '+') {
@@ -721,7 +715,7 @@ sub on_nick {
    my ($oldnick, $newnick) = @_;
 
    if ($oldnick eq $mynick) {
-      printf("[%s] *** Renamed from %s to %s\n", scalar localtime, $oldnick, $newnick) unless $rawlog;
+      printf("[%s] *** Renamed from %s to %s\n", scalar localtime, $oldnick, $newnick);
       $mynick = $newnick;
    }
 
@@ -735,7 +729,7 @@ sub on_nick {
 
 sub on_nickinuse {
    unless ($connected) {
-      printf("[%s] *** Nickname %s is already in use\n", scalar localtime, $mynick) unless $rawlog;
+      printf("[%s] *** Nickname %s is already in use\n", scalar localtime, $mynick);
       $mynick = $myaltnick;
       raw('NICK %s', $mynick);
       $nicktries++;
@@ -751,7 +745,7 @@ sub on_notice {
 
    if ($auth && $target eq $mynick && $who eq $authservackwho) {
       if ($msg =~ /^$authservackstring/) {
-         printf("[%s] *** Successfully authenticated to %s as \"%s\"\n", scalar localtime, $authserv, $1 ? $1 : $mynick) unless $rawlog;
+         printf("[%s] *** Successfully authenticated to %s as \"%s\"\n", scalar localtime, $authserv, $1 ? $1 : $mynick);
          autojoin();
       }
    }
@@ -760,17 +754,17 @@ sub on_notice {
 sub on_ownjoin {
    my $chan = shift || return;
 
-   printf("[%s] *** Joined %s\n", scalar localtime, $chan) unless $rawlog;
+   printf("[%s] *** Joined %s\n", scalar localtime, $chan);
 }
 
 sub on_ownkick {
    my ($chan, $kicker, $reason) = @_;
 
-   printf("[%s] *** Kicked from %s by %s [%s]\n", scalar localtime, $chan, $kicker, $reason) unless $rawlog;
+   printf("[%s] *** Kicked from %s by %s [%s]\n", scalar localtime, $chan, $kicker, $reason);
    delete $mychannels{$myprofile}{$chan};
 
    if ($rejoinonkick && exists $channels{$myprofile}{$chan}) {
-      printf("[%s] *** Trying to rejoin %s because it is a main channel\n", scalar localtime, $chan) unless $rawlog;
+      printf("[%s] *** Trying to rejoin %s because it is a main channel\n", scalar localtime, $chan);
       raw('JOIN %s %s', $chan, $channels{$myprofile}{$chan});
    }
 }
@@ -778,7 +772,7 @@ sub on_ownkick {
 sub on_ownpart {
    my $chan = shift || return;
 
-   printf("[%s] *** Left %s\n", scalar localtime, $chan) unless $rawlog;
+   printf("[%s] *** Left %s\n", scalar localtime, $chan);
    delete $mychannels{$myprofile}{$chan};
 }
 

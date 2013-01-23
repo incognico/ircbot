@@ -109,13 +109,13 @@ sub on_privmsg {
       my ($creator, $irccode, $deer, $special) = fetchdeer($1);
 
       if ($creator) {
+         printf("[%s] === modules::%s: Deer [%s] on %s for %s\n", scalar localtime, __PACKAGE__, $1, $target, $nick);
+
          main::msg($target, $irccode);
          main::msg($target, '%s by %s', $deer, $creator) if $special;
 
          $prevdeers{$target}{deer}    = $deer;
          $prevdeers{$target}{creator} = $creator;
-
-         printf("[%s] === modules::%s: Deer [%s] on %s for %s\n", scalar localtime, __PACKAGE__, $1, $target, $nick) unless main::israwlog();
       }
       else {
          main::msg($target, '404 Deer Not Found. Go to %s and create it.', $deeritor);

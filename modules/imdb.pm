@@ -39,7 +39,7 @@ sub on_privmsg {
       # cmds
       if ($cmd eq 'IMDB') {
          if ($args[0]) {
-            printf("[%s] === modules::%s: IMDB [%s] on %s by %s\n", scalar localtime, __PACKAGE__, "@args", $target, $nick) unless main::israwlog();
+            printf("[%s] === modules::%s: IMDB [%s] on %s by %s\n", scalar localtime, __PACKAGE__, "@args", $target, $nick);
 
             my $imdb;
 

@@ -115,7 +115,7 @@ sub on_privmsg {
       if ($cmd eq 'WEATHER' || $cmd eq 'W') {
          my ($loc, $lat, $lon);
 
-         if (!$args[0]) {
+         unless ($args[0]) {
             if (exists $userlocations{$nick}) {
                $loc = $userlocations{$nick}{loc};
                $lat = $userlocations{$nick}{lat};
@@ -145,6 +145,8 @@ sub on_privmsg {
 
             $changed = 1;
          }
+
+         printf("[%s] === modules::%s: Weather [%s] on %s by %s\n", scalar localtime, __PACKAGE__, $loc, $target, $nick);
 
          my $fcloc = Weather::YR::Locationforecast->new({latitude => $lat, longitude => $lon});
          my $fc    = $fcloc->forecast;
