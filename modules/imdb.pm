@@ -38,32 +38,37 @@ sub on_privmsg {
 
       # cmds
       if ($cmd eq 'IMDB') {
-         printf("[%s] === modules::%s: IMDB [%s] on %s by %s\n", scalar localtime, __PACKAGE__, "@args", $target, $nick) unless main::israwlog();
+         if ($args[0]) {
+            printf("[%s] === modules::%s: IMDB [%s] on %s by %s\n", scalar localtime, __PACKAGE__, "@args", $target, $nick) unless main::israwlog();
 
-         my $imdb;
+            my $imdb;
 
-         eval {
-            $imdb = IMDB::Film->new(crit => "@args", search => 'find?s=tt&exact=false&q=', host => 'akas.imdb.com', cache => 1, cache_root => $cacheroot, cache_exp => '1 d');
+            eval {
+               $imdb = IMDB::Film->new(crit => "@args", search => 'find?s=tt&exact=false&q=', host => 'akas.imdb.com', cache => 1, cache_root => $cacheroot, cache_exp => '1 d');
 
-            if ($imdb->status) {
-               my ($ratingorig, my $votesorig) = $imdb->rating;
-               my $rating = $ratingorig ? $ratingorig : '-';
-               my $votes = $votesorig ? $votesorig : '<10';
-               my $plot = $imdb->plot ? $imdb->plot : '-';
-               $plot =~ s/ See full summary.+//;
-               my $imdbres = $imdb->title . ' (' . $imdb->year . ')' . ' :: http://imdb.com/title/tt' . $imdb->id . ' :: Rating: ' . $rating . ' (' . $votes . ' votes) :: Plot: ' . $plot;
+               if ($imdb->status) {
+                  my ($ratingorig, my $votesorig) = $imdb->rating;
+                  my $rating = $ratingorig ? $ratingorig : '-';
+                  my $votes = $votesorig ? $votesorig : '<10';
+                  my $plot = $imdb->plot ? $imdb->plot : '-';
+                  $plot =~ s/ See full summary.+//;
+                  my $imdbres = $imdb->title . ' (' . $imdb->year . ')' . ' :: http://imdb.com/title/tt' . $imdb->id . ' :: Rating: ' . $rating . ' (' . $votes . ' votes) :: Plot: ' . $plot;
 
-               if (length($imdbres) > 385) {
-                  main::msg($target, '%s...', substr($imdbres, 0, 384));
+                  if (length($imdbres) > 385) {
+                     main::msg($target, '%s...', substr($imdbres, 0, 384));
+                  }
+                  else {
+                     main::msg($target, $imdbres);
+                  }
                }
                else {
-                  main::msg($target, $imdbres);
+                  main::msg($target, 'no match');
                }
-            }
-            else {
-               main::msg($target, 'no match');
-            }
-         };
+            };
+         }
+         else {
+            main::err($target, 'syntax: IMDB <search string>');
+         }
       }
    }
 }

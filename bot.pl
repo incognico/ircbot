@@ -430,8 +430,15 @@ sub ircgate {
 
             if ($gatesub) {
                splice(@data, 0, 2);
-               printf("[%s] === ircgate: module [%s] %s(%s)\n", scalar localtime, $gatemod, $gatesub, join(' ', @data));
-               $gatemod->$gatesub(@data) if $gatemod->can($gatesub);
+
+               if ($gatemod eq 'settopic') {
+                  printf("[%s] === ircgate: [main] settopic(%s %s)\n", scalar localtime, $gatesub, join(' ', @data));
+                  settopic($gatesub, "@data");
+               }
+               else {
+                  printf("[%s] === ircgate: module [%s] %s(%s)\n", scalar localtime, $gatemod, $gatesub, join(' ', @data));
+                  $gatemod->$gatesub(@data) if $gatemod->can($gatesub);
+               }
             }
          }
          else {
