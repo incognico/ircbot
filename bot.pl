@@ -619,7 +619,7 @@ sub unloadmodules {
       if (exists $modules{$_}) {
          printf("[%s] === Unloading module [%s]\n", scalar localtime, $_);
          $_->on_unload if $_->can('on_unload');
-         $refresher->unload_module("modules/$_.pm");
+         $refresher->unload_module("$RealBin/modules/$_.pm");
          delete $modules{$_};
       }
       else {
