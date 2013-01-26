@@ -122,7 +122,7 @@ sub on_privmsg {
                $lon = $userlocations{$nick}{lon};
             }
             else {
-               main::msg($target, 'last location for %s is unknown, please specify one and I\'ll remember it.', $nick);
+               main::msg($target, q{last location for %s is unknown, please specify one and I'll remember it.}, $nick);
                return;
             }
          }

@@ -34,7 +34,7 @@ my $silent       = 0;
 my $public       = 1;
 my $rejoinonkick = 1;
 my $splitlen     = 400;
-my $ircgatedir   = '/usr/home/k/ircgate_nico'; # no tailing /
+my $ircgatedir   = '/tmp/ircgate'; # no tailing /
 my $useoident    = 1;
 my $mytrigger    = '!';
 my $myaddr4      = '127.0.0.1';
@@ -42,7 +42,7 @@ my $myaddr6      = '::1';
 my $adminpass    = 'secret';
 my @myadmins     = qw(nico!nico@lifeisabug.com other!mask@of.some.admin);
 my @mymodules    = qw(basecmds invitejoin tlds);
-my $myhelptext   = 'Help yourself.';
+my $myhelptext   = q{My only public command: TRIGGERtld <[.]tld>};
 
 # profiles (networks)
 my %profiles = (
@@ -116,6 +116,8 @@ $public       = $profiles{$myprofile}{public}       if defined $profiles{$myprof
 $rawlog       = $profiles{$myprofile}{rawlog}       if defined $profiles{$myprofile}{rawlog};
 $rejoinonkick = $profiles{$myprofile}{rejoinonkick} if defined $profiles{$myprofile}{rejoinonkick};
 $silent       = $profiles{$myprofile}{silent}       if defined $profiles{$myprofile}{silent};
+
+$myhelptext =~ s/TRIGGER/$mytrigger/g;
 
 my %authedadmins;
 my %mychannels;

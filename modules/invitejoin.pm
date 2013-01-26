@@ -10,6 +10,7 @@ use YAML qw(LoadFile DumpFile);
 
 my $channels;
 my $mychannels;
+my $myhelptext;
 my $myprofile;
 my $mytrigger;
 my $public;
@@ -36,6 +37,7 @@ sub new {
 
    $channels   = $self->{channels};
    $mychannels = $self->{mychannels};
+   $myhelptext = $self->{myhelptext};
    $myprofile  = $self->{myprofile};
    $mytrigger  = $self->{mytrigger};
    $public     = $self->{public};
@@ -106,6 +108,14 @@ sub on_invite {
          unless (exists $invitechannels{blacklist}{$$myprofile}{$chan}) {
             unless (exists $recentkickchannels{$$myprofile}{$chan}) {
                main::joinchan($chan);
+
+               if ($$myhelptext) {
+                  main::msg($chan, q{Hello there! I was invited by %s. My trigger is '%s', more info is available by using '%shelp'. Most commands work in private too.}, $nick, $$mytrigger, $$mytrigger);
+               }
+               else {
+                  main::msg($chan, 'Hello there! I was invited by %s.', $nick);
+               }
+
                $invitechannels{joinlist}{$$myprofile}{$chan} = $who;
                $changed = 1;
             }
