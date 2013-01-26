@@ -7,6 +7,7 @@
 use utf8;
 use strict;
 use warnings;
+
 use feature 'switch';
 use sigtrap 'handler', \&quit, 'INT';
 
@@ -15,6 +16,7 @@ use threads::shared;
 
 no warnings 'qw';
 
+use FindBin '$RealBin';
 use Carp;
 use Getopt::Std;
 use Module::Refresh;
@@ -494,11 +496,11 @@ sub loadmodules {
       printf("[%s] === Loading module [%s]\n", scalar localtime, $_);
 
       unless (exists $modules{$_}) {
-         my $modpath = "modules/$_.pm";
+         my $module = "$RealBin/modules/$_.pm";
 
-         if (-e $modpath) {
-            unless (system("/usr/bin/env perl -c $modpath > /dev/null 2>&1")) {
-               eval { require "modules/$_.pm" };
+         if (-e $module) {
+            unless (system("/usr/bin/env perl -c $module > /dev/null 2>&1")) {
+               eval { require $module };
 
                unless ($@) {
                   $modules{$_} = $_->new(
