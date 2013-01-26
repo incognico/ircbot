@@ -239,7 +239,7 @@ while (my @raw = split(' ', <$socket>)) {
       }
       when ('INVITE') {
          my $who = substr($raw[0], 1);
-         callhook('on_invite', (split('!', $who))[0], lc(substr($raw[3], 1)), $who);
+         callhook('on_invite', (split('!', $who))[0], lc(((substr($raw[3], 0, 1) eq ':') ? substr($raw[3], 1) : $raw[3])), $who);
          # nick, channel, who
       }
       when ('KICK') {
