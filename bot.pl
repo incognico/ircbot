@@ -406,7 +406,7 @@ sub err {
    my $target = shift;
    my $string = sprintf(shift, @_);
 
-   msg($target, 'error: %s {::%s}', $string, caller(0)) unless $silent;
+   msg($target, 'error: %s {::%s}', $string, caller(0));
 }
 
 sub hlp {
@@ -584,7 +584,7 @@ sub ntc {
 
 sub partchan {
    my ($chan, $reason) = @_;
-   
+
    if ($reason) {
       raw('PART %s :%s', $chan, $reason);
    }
@@ -846,7 +846,7 @@ sub on_privmsg {
                   ack($target);
                }
                else {
-                  err($target, 'syntax: MODULE(MOD) LOAD(L) ALL|<name> [<name>]...');
+                  hlp($target, 'syntax: MODULE(MOD) LOAD(L) ALL|<name> [<name>]...');
                }
             }
             elsif ($cargs[0] eq 'UNLOAD' || $cargs[0] eq 'U') {
@@ -857,7 +857,7 @@ sub on_privmsg {
                   ack($target);
                }
                else {
-                  err($target, 'syntax: MODULE(MOD) UNLOAD(U) ALL|<name> [<name>]...');
+                  hlp($target, 'syntax: MODULE(MOD) UNLOAD(U) ALL|<name> [<name>]...');
                }
             }
             elsif ($cargs[0] eq 'RELOAD' || $cargs[0] eq 'R') {
@@ -882,7 +882,7 @@ sub on_privmsg {
                   }
                }
                else {
-                  err($target, 'syntax: MODULE(MOD) RELOAD(R) ALL|<name> [<name>]...');
+                  hlp($target, 'syntax: MODULE(MOD) RELOAD(R) ALL|<name> [<name>]...');
                }
             }
             elsif ($cargs[0] eq 'HELP') {
@@ -890,7 +890,7 @@ sub on_privmsg {
             }
          }
          elsif (!$args[0]) {
-            err($target, $_) for @syntax;
+            hlp($target, $_) for @syntax;
          }
       }
    }

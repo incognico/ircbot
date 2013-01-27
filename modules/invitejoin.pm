@@ -219,7 +219,7 @@ sub on_privmsg {
                   main::msg($target, 'PUBLIC: %s', $$public ? 'ON' : 'OFF');
                }
                else {
-                  main::err($target, 'syntax: SET PUBLIC [ON|OFF]');
+                  main::hlp($target, 'syntax: SET PUBLIC [ON|OFF]');
                }
             }
             elsif ($cargs[0] eq 'HELP') {
@@ -227,7 +227,7 @@ sub on_privmsg {
             }
          }
          else {
-            main::err($target, $syntax);
+            main::hlp($target, $syntax);
          }
       }
       elsif ($cmd eq 'LIST' || $cmd eq 'LS') {
@@ -255,7 +255,7 @@ sub on_privmsg {
                   }
                }
                else {
-                  main::err($target, 'syntax: LIST(LS) INVITECHANNELS(INVCHANS) [VERBOSE(V)]');
+                  main::hlp($target, 'syntax: LIST(LS) INVITECHANNELS(INVCHANS) [VERBOSE(V)]');
                }
 
                if ($count > 0) {
@@ -270,7 +270,7 @@ sub on_privmsg {
             }
          }
          else {
-            main::err($target, 'syntax: LIST(LS) INVITECHANNELS(INVCHANS) [VERBOSE(V)]');
+            main::hlp($target, 'syntax: LIST(LS) INVITECHANNELS(INVCHANS) [VERBOSE(V)]');
          }
       }
       elsif ($cmd eq 'BLACKLIST' || $cmd eq 'BL') {
@@ -316,7 +316,7 @@ sub on_privmsg {
                   }
                }
                else {
-                  main::err($target, 'syntax: BLACKLIST(BL) ADD <channel> [,<channel>]...');
+                  main::hlp($target, 'syntax: BLACKLIST(BL) ADD <channel> [,<channel>]...');
                }
             }
             elsif ($cargs[0] eq 'DELETE' || $cargs[0] eq 'DEL') {
@@ -344,7 +344,7 @@ sub on_privmsg {
                   }
                }
                else {
-                  main::err($target, 'syntax: BLACKLIST(BL) DELETE(DEL) <channel> [,<channel>]...');
+                  main::hlp($target, 'syntax: BLACKLIST(BL) DELETE(DEL) <channel> [,<channel>]...');
                }
             }
             elsif ($cargs[0] eq 'CHECK' || $cargs[0] eq 'CHK') {
@@ -363,7 +363,7 @@ sub on_privmsg {
                   }
                }
                else {
-                  main::err($target, 'syntax: BLACKLIST(BL) CHECK(CHK) <channel> [,<channel>]...');
+                  main::hlp($target, 'syntax: BLACKLIST(BL) CHECK(CHK) <channel> [,<channel>]...');
                }
             }
             elsif ($cargs[0] eq 'HELP') {
@@ -371,7 +371,7 @@ sub on_privmsg {
             }
          }
          elsif (!$args[0]) {
-            main::err($target, $_) for (@syntax);
+            main::hlp($target, $_) for (@syntax);
          }
       }
    }

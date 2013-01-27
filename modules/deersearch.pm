@@ -5,8 +5,6 @@ use strict;
 use warnings;
 
 use DBI;
-use SQL::Abstract;
-use SQL::Abstract::Limit;
 
 my $mytrigger;
 
@@ -38,8 +36,13 @@ sub new {
 }
 
 sub mysql_connect {
-   $dbh = DBI->connect("DBI:mysql:$sql{db}:$sql{host}", $sql{user}, $sql{pass},
-          {RaiseError => 1, mysql_auto_reconnect => 1, mysql_enable_utf8 => 1});
+   unless ($dbh = DBI->connect("DBI:mysql:$sql{db}:$sql{host}", $sql{user}, $sql{pass}, {mysql_auto_reconnect => 1, mysql_enable_utf8 => 1})) {
+      printf("[%s] !!! modules::%s: %s\n", scalar localtime, __PACKAGE__, $DBI::errstr);
+      return 1;
+   }
+   else {
+      return 0;
+   }
 }
 
 sub mysql_disconnect {
@@ -59,28 +62,19 @@ sub on_privmsg {
       if ($cmd eq 'DEERSEARCH' || $cmd eq 'DS') {
          if ($args[0]) {
             if (length("@args") < 2) {
-               main::err($target, 'specify 2 or more characters');
+               main::msg($target, 'specify 2 or more characters');
                return;
             }
 
-            my $sqlo = new SQL::Abstract::Limit(limit_dialect => 'LimitXY');
-            my @where = (
-               {
-                  deer => {
-                     like => sprintf('%%%s%%', "@args"),
-                  },
-               },
-            );
+            my $stmt = "SELECT deer FROM $sql{table} WHERE deer LIKE ? ORDER BY id DESC LIMIT ?";
+            my @bind = ("%@args%", $maxresults);
+            
+            unless (mysql_connect() == 0) {
+               main::err($target, 'database error');
+               return 1;
+            }
 
-            mysql_connect();
-
-            my ($stmt, @bind) = $sqlo->select($sql{table}, 'deer', \@where, \'id DESC', $maxresults);
-            my $sth = $dbh->prepare($stmt);
-            my $result;
-
-            $sth->execute(@bind);
-            $result = $sth->fetchall_arrayref({});
-            $sth->finish;
+            my $result = $dbh->selectall_arrayref($stmt, {}, @bind);
 
             mysql_disconnect();
 
@@ -91,7 +85,7 @@ sub on_privmsg {
                my $output;
 
                for (@$result) {
-                  $output .= $_->{deer} . ', ';
+                  $output .= $_->[0] . ', ';
                }
 
                if ($count == 1) {
@@ -109,7 +103,7 @@ sub on_privmsg {
             }
          }
          else {
-            main::err($target, 'syntax: DEERSEARCH(DS) <search string>');
+            main::hlp($target, 'syntax: DEERSEARCH(DS) <search string>');
          }
       }
    }

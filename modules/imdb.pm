@@ -67,7 +67,7 @@ sub on_privmsg {
             };
          }
          else {
-            main::err($target, 'syntax: IMDB <search string>');
+            main::hlp($target, 'syntax: IMDB <search string>');
          }
       }
    }

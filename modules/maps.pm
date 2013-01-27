@@ -45,7 +45,7 @@ sub on_privmsg {
             }
          }
          else {
-            main::err($target, 'syntax: MAPS <location>');
+            main::hlp($target, 'syntax: MAPS <location>');
          }
       }
    }

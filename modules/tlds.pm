@@ -4,8 +4,6 @@ use utf8;
 use strict;
 use warnings;
 
-use Carp;
-
 my $mytrigger;
 
 my %tlds;
@@ -17,8 +15,10 @@ my $csv = sprintf("$ENV{HOME}/.bot/%s/%s.csv", __PACKAGE__, __PACKAGE__);
 
 ### end config
 
-if (-e $csv) {
-   open my $fh, '<:encoding(UTF-8)', $csv || croak $!;
+unless (open my $fh, '<', $csv) {
+return;
+}
+else {
    while (my $line = <$fh>) {
       chomp $line;
       my @data = split(',', $line);
@@ -62,7 +62,7 @@ sub on_privmsg {
             }
          }
          else {
-            main::err($target, 'syntax: TLD <[.]tld>');
+            main::hlp($target, 'syntax: TLD <[.]tld>');
          }
       }
    }

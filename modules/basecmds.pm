@@ -77,7 +77,7 @@ sub on_privmsg {
                   main::msg($target, 'RAWLOG: %s', $$rawlog ? 'ON' : 'OFF');
                }
                else {
-                  main::err($target, 'syntax: SET RAWLOG [ON|OFF]');
+                  main::hlp($target, 'syntax: SET RAWLOG [ON|OFF]');
                }
             }
             elsif ($cargs[0] eq 'SILENT') {
@@ -95,7 +95,7 @@ sub on_privmsg {
                   main::msg($target, 'SILENT: %s', $$silent ? 'ON' : 'OFF');
                }
                else {
-                  main::err($target, 'syntax: SET SILENT [ON|OFF]');
+                  main::hlp($target, 'syntax: SET SILENT [ON|OFF]');
                }
             }
             elsif ($cargs[0] eq 'HELP') {
@@ -103,7 +103,7 @@ sub on_privmsg {
             }
          }
          else {
-            main::err($target, $syntax);
+            main::hlp($target, $syntax);
          }
       }
       elsif ($cmd eq 'RAW') {
@@ -112,7 +112,7 @@ sub on_privmsg {
             main::ack($target);
          }
          else {
-            main::err($target, 'syntax: RAW <input>');
+            main::hlp($target, 'syntax: RAW <input>');
          }
       }
       elsif ($cmd eq 'EVAL') {
@@ -121,7 +121,7 @@ sub on_privmsg {
             main::msg($target, $@) if $@;
          }
          else {
-            main::err($target, 'syntax: EVAL <perl code>');
+            main::hlp($target, 'syntax: EVAL <perl code>');
          }
       }
       elsif ($cmd eq 'SHELL') {
@@ -140,7 +140,7 @@ sub on_privmsg {
             }
          }
          else {
-            main::err($target, 'syntax: SHELL <command>');
+            main::hlp($target, 'syntax: SHELL <command>');
          }
       }
       elsif ($cmd eq 'JOIN') {
@@ -161,7 +161,7 @@ sub on_privmsg {
             main::ack($target) if $joined;
          }
          else {
-            main::err($target, 'syntax: JOIN <channel>');
+            main::hlp($target, 'syntax: JOIN <channel>');
          }
       }
       elsif ($cmd eq 'PART') {
@@ -186,7 +186,7 @@ sub on_privmsg {
                main::partchan($target);
             }
             else {
-               main::err($target, 'syntax: PART <channel> [,<channel>]...');
+               main::hlp($target, 'syntax: PART <channel> [,<channel>]...');
             }
          }
       }
@@ -235,7 +235,7 @@ sub on_privmsg {
                   }
                }
                else {
-                  main::err($target, 'syntax: LIST(LS) NAMES <channel>');
+                  main::hlp($target, 'syntax: LIST(LS) NAMES <channel>');
                }
             }
             elsif ($cargs[0] eq 'HELP') {
@@ -243,7 +243,7 @@ sub on_privmsg {
             }
          }
          else {
-            main::err($target, 'syntax: LIST(LS) CHANNELS(CHANS) | LIST(LS) NAMES <channel>');
+            main::hlp($target, 'syntax: LIST(LS) CHANNELS(CHANS) | LIST(LS) NAMES <channel>');
          }
       }
       elsif ($cmd eq 'MSG') {
@@ -252,7 +252,7 @@ sub on_privmsg {
             main::ack($target) unless $args[0] eq $target;
          }
          else {
-            main::err($target, 'syntax: MSG <target> <text>');
+            main::hlp($target, 'syntax: MSG <target> <text>');
          }
       }
       elsif ($cmd eq 'ACT') {
@@ -261,7 +261,7 @@ sub on_privmsg {
             main::ack($target) unless $args[0] eq $target;
          }
          else {
-            main::err($target, 'syntax: ACT <target> <text>');
+            main::hlp($target, 'syntax: ACT <target> <text>');
          }
       }
       elsif ($cmd eq 'NTC') {
@@ -270,7 +270,7 @@ sub on_privmsg {
             main::ack($target) unless $args[0] eq $target;
          }
          else {
-            main::err($target, 'syntax: NTC <target> <text>');
+            main::hlp($target, 'syntax: NTC <target> <text>');
          }
       }
       elsif ($cmd eq 'ACK') {

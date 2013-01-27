@@ -14,8 +14,10 @@ my $file = sprintf("$ENV{HOME}/.bot/%s/%ss.txt", __PACKAGE__, __PACKAGE__);
 
 ### end config
 
-if (-e $file) {
-   open my $fh, '<:encoding(UTF-8)', $file || die $!;
+unless(open my $fh, '<', $file) {
+   return;
+}
+else {
    while(my $line = <$fh>) {
       chomp $line;
       push @curses, $line;

@@ -20,8 +20,10 @@ my $percentage = 0.2; # 0.25 = 25%
 
 ### end config
 
-if (-e $file) {
-   open my $fh, '<:encoding(UTF-8)', $file || die $!;
+unless(open my $fh, '<', $file) {
+   return;
+}
+else {
    while(my $line = <$fh>) {
       chomp $line;
       push @yiffs, $line;

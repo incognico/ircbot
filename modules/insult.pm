@@ -20,8 +20,10 @@ my $file2 = sprintf("$ENV{HOME}/.bot/%s/words2.txt", __PACKAGE__);
 
 ### end config
 
-if (-e $file1) {
-   open my $fh1, '<:encoding(UTF-8)', $file1 || die $!;
+unless(open my $fh1, '<', $file1) {
+   return;
+}
+else {
    while(my $line = <$fh1>) {
       chomp $line;
       push @words1, $line;
@@ -29,8 +31,10 @@ if (-e $file1) {
    close $fh1;
 }
 
-if (-e $file2) {
-   open my $fh2, '<:encoding(UTF-8)', $file2 || die $!;
+unless(open my $fh2, '<', $file2) {
+   return;
+}
+else {
    while(my $line = <$fh2>) {
       chomp $line;
       push @words2, $line;

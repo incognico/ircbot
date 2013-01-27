@@ -5,8 +5,6 @@ use strict;
 use warnings;
 
 use DBI;
-use SQL::Abstract;
-use SQL::Abstract::Limit;
 
 my $mytrigger;
 
@@ -39,8 +37,13 @@ sub new {
 }
 
 sub mysql_connect {
-   $dbh = DBI->connect("DBI:mysql:$sql{db}:$sql{host}", $sql{user}, $sql{pass},
-          {RaiseError => 1, mysql_auto_reconnect => 1, mysql_enable_utf8 => 1});
+   unless ($dbh = DBI->connect("DBI:mysql:$sql{db}:$sql{host}", $sql{user}, $sql{pass}, {mysql_auto_reconnect => 1, mysql_enable_utf8 => 1})) {
+      printf("[%s] !!! modules::%s: %s\n", scalar localtime, __PACKAGE__, $DBI::errstr);
+      return 1;
+   }
+   else {
+      return 0;
+   }
 }
 
 sub mysql_disconnect {
@@ -48,54 +51,34 @@ sub mysql_disconnect {
 }
 
 sub fetchdeer {
-   my $deer = shift || return;
-   my ($special, $creator, $sqlout);
+   my $deer   = shift || return;
+   my $ucdeer = uc($deer);
+   my ($stmt, @bind, $special, $creator);
 
-   eval {
-      my $sql = SQL::Abstract::Limit->new(limit_dialect => 'LimitXY');
-      my $ucdeer = uc($deer);
-      my ($stmt, @bind);
-
-      mysql_connect();
-
-      if ($ucdeer eq 'RANDOM') {
-         $special = 1;
-         ($stmt, @bind) = $sql->select($sql{table}, 'creator,irccode,deer', {}, \'RAND() DESC', 1);
-      }
-      elsif ($ucdeer eq 'LATEST') {
-         $special = 1;
-         ($stmt, @bind) = $sql->select($sql{table}, 'creator,irccode,deer', {}, \'date DESC', 1);
-      }
-      else {
-         ($stmt, @bind) = $sql->select($sql{table}, 'creator,irccode', { deer => $deer }, \'id DESC', 1);
-      }
-
-      my $sth = $dbh->prepare($stmt);
-
-      $sth->execute(@bind);
-
-      if ($sth->rows == 0) {
-         return;
-      }
-      else {
-         $sqlout = $sth->fetch;
-      }
-
-      $sth->finish;
-      mysql_disconnect();
-   };
-
-   if ($@) {
-      chomp $@;
-      warn "$@";
+   if ($ucdeer eq 'RANDOM') {
+      $special = 1;
+      $stmt = "SELECT creator,irccode,deer FROM $sql{table} ORDER BY RAND() DESC LIMIT 1";
+   }
+   elsif ($ucdeer eq 'LATEST') {
+      $special = 1;
+      $stmt = "SELECT creator,irccode,deer FROM $sql{table} ORDER BY date DESC LIMIT 1";
    }
    else {
-      unless ($special) {
-         return @$sqlout[0], @$sqlout[1], $deer, 0;
-      }
-      else {
-         return @$sqlout[0], @$sqlout[1], @$sqlout[2], 1;
-      }
+      $stmt = "SELECT creator,irccode,deer FROM $sql{table} WHERE deer = ? ORDER BY id DESC LIMIT 1";
+      @bind = $deer;
+   }
+
+   return 1 unless (mysql_connect() == 0);  
+ 
+   my $result = $dbh->selectrow_arrayref($stmt, {}, @bind);
+   
+   mysql_disconnect();
+
+   unless ($result) {
+      return 0;
+   }
+   else {
+      return @$result[0], @$result[1], @$result[2], $special;
    }
 }
 
@@ -106,19 +89,24 @@ sub on_privmsg {
 
    # cmds
    if ($msg =~ /^deer (.+)/) {
-      my ($creator, $irccode, $deer, $special) = fetchdeer($1);
-
-      if ($creator) {
-         printf("[%s] === modules::%s: Deer [%s] on %s for %s\n", scalar localtime, __PACKAGE__, $1, $target, $nick);
-
-         main::msg($target, $irccode);
-         main::msg($target, '%s by %s', $deer, $creator) if $special;
-
-         $prevdeers{$target}{deer}    = $deer;
-         $prevdeers{$target}{creator} = $creator;
+      my ($creator, $irccode, $deer, $special);
+     
+      if ((($creator, $irccode, $deer, $special) = fetchdeer($1)) == 1) {
+         main::err($target, 'database error');
       }
       else {
-         main::msg($target, '404 Deer Not Found. Go to %s and create it.', $deeritor);
+         if ($creator) {
+            printf("[%s] === modules::%s: Deer [%s] on %s for %s\n", scalar localtime, __PACKAGE__, $1, $target, $nick);
+
+            main::msg($target, $irccode);
+            main::msg($target, '%s by %s', $deer, $creator) if $special;
+
+            $prevdeers{$target}{deer}    = $deer;
+            $prevdeers{$target}{creator} = $creator;
+         }
+         else {
+            main::msg($target, '404 Deer Not Found. Go to %s and create it.', $deeritor);
+         }
       }
    }
    elsif (lc($msg) eq "$$mytrigger prevdeer") {
