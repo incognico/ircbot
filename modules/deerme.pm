@@ -68,14 +68,14 @@ sub fetchdeer {
       @bind = $deer;
    }
 
-   return 1 unless (mysql_connect() == 0);  
+   return 2 unless (mysql_connect() == 0);
  
    my $result = $dbh->selectrow_arrayref($stmt, {}, @bind);
    
    mysql_disconnect();
 
    unless ($result) {
-      return 0;
+      return 1;
    }
    else {
       return @$result[0], @$result[1], @$result[2], $special;
@@ -89,24 +89,22 @@ sub on_privmsg {
 
    # cmds
    if ($msg =~ /^deer (.+)/) {
-      my ($creator, $irccode, $deer, $special);
-     
-      if ((($creator, $irccode, $deer, $special) = fetchdeer($1)) == 1) {
+      my ($creator, $irccode, $deer, $special) = fetchdeer($1);
+
+      if ($creator == 2) {
          main::err($target, 'database error');
       }
+      elsif ($creator == 1) {
+         main::msg($target, '404 Deer Not Found. Go to %s and create it.', $deeritor);
+      }
       else {
-         if ($creator) {
-            printf("[%s] === modules::%s: Deer [%s] on %s for %s\n", scalar localtime, __PACKAGE__, $1, $target, $nick);
+         printf("[%s] === modules::%s: Deer [%s] on %s for %s\n", scalar localtime, __PACKAGE__, $1, $target, $nick);
 
-            main::msg($target, $irccode);
-            main::msg($target, '%s by %s', $deer, $creator) if $special;
+         main::msg($target, $irccode);
+         main::msg($target, '%s by %s', $deer, $creator) if $special;
 
-            $prevdeers{$target}{deer}    = $deer;
-            $prevdeers{$target}{creator} = $creator;
-         }
-         else {
-            main::msg($target, '404 Deer Not Found. Go to %s and create it.', $deeritor);
-         }
+         $prevdeers{$target}{deer}    = $deer;
+         $prevdeers{$target}{creator} = $creator;
       }
    }
    elsif (lc($msg) eq "$$mytrigger prevdeer") {
