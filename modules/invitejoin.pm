@@ -61,7 +61,7 @@ sub autojoin {
    }
 }
 
-sub checksize {
+sub finalizejoin {
    my $chan = shift || return;
 
    if (exists $invitechannels{joinlist}{$$myprofile}{$chan} && exists $mychannels->{$$myprofile}{$chan}) {
@@ -71,6 +71,16 @@ sub checksize {
          $recentkickchannels{$$myprofile}{$chan} = 'myself (channel does not qualify)';
          delete $invitechannels{joinlist}{$$myprofile}{$chan};
          $changed = 1;
+      }
+      else {
+         my $nick = (split(/!/, $invitechannels{joinlist}{$$myprofile}{$chan}))[0];
+
+         if ($$myhelptext) {
+            main::msg($chan, q{Hello there! I was invited by %s. My trigger is '%s', more info is available by using '%shelp'. Most commands work in query too.}, $nick, $$mytrigger, $$mytrigger);
+         }
+         else {
+            main::msg($chan, 'Hello there! I was invited by %s.', $nick);
+         }
       }
    }
 }
@@ -108,13 +118,6 @@ sub on_invite {
          unless (exists $invitechannels{blacklist}{$$myprofile}{$chan}) {
             unless (exists $recentkickchannels{$$myprofile}{$chan}) {
                main::joinchan($chan);
-
-               if ($$myhelptext) {
-                  main::msg($chan, q{Hello there! I was invited by %s. My trigger is '%s', more info is available by using '%shelp'. Most commands work in private too.}, $nick, $$mytrigger, $$mytrigger);
-               }
-               else {
-                  main::msg($chan, 'Hello there! I was invited by %s.', $nick);
-               }
 
                $invitechannels{joinlist}{$$myprofile}{$chan} = $who;
                $changed = 1;
@@ -176,7 +179,7 @@ sub on_ping {
       delete $recentkickchannels{$$myprofile};
 
       for (keys(%{$invitechannels{joinlist}{$$myprofile}})) {
-         checksize($_);
+         finalizejoin($_);
       }
    }
    else {
@@ -380,7 +383,7 @@ sub on_privmsg {
 sub on_synced {
    my ($self, $chan) = @_;
 
-   checksize($chan);
+   finalizejoin($chan);
 }
 
 sub on_unload {
