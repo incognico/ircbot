@@ -4,8 +4,9 @@ use utf8;
 use strict;
 use warnings;
 
-use LWP::Simple;
 use JSON;
+use LWP::Simple;
+use URI::Escape;
 
 my $mytrigger;
 
@@ -36,8 +37,8 @@ sub on_privmsg {
          if ($args[0]) {
             printf("[%s] === modules::%s: OMDB [%s] on %s by %s\n", scalar localtime, __PACKAGE__, "@args", $target, $nick);
 
-             my $year  = pop(@args) if ($args[$#args] =~ /^\d{4}$/);
-            (my $title = "@args") =~ s/[^A-Za-z-_0-9 ]//g;
+            my $year  = pop(@args) if ($args[$#args] =~ /^\d{4}$/);
+            my $title = uri_escape("@args");
 
             my $type = 't';
             $type = 'i' if ($title =~ /((?:tt)?\d{7})/);
