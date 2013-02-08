@@ -33,7 +33,7 @@ sub on_privmsg {
       $target = $nick unless $ischan;
 
       # cmds
-      if ($cmd =~ /([IO]MDB|FILM|FLICK|MOVIE|RT)/) {
+      if ($cmd =~ /^([IO]MDB|FILM|FLICK|MOVIE|RT)$/) {
          if ($args[0]) {
             printf("[%s] === modules::%s: OMDB [%s] on %s by %s\n", scalar localtime, __PACKAGE__, "@args", $target, $nick);
 

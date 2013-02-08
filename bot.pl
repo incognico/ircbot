@@ -4,6 +4,8 @@
 # 
 # Copyright 2012, Nico R. Wohlgemuth <nico@lifeisabug.com>
 
+my $version = '1.0';
+
 use utf8;
 use strict;
 use warnings;
@@ -16,11 +18,11 @@ use threads::shared;
 
 no warnings 'qw';
 
-use FindBin '$RealBin';
 use Carp;
+use File::Tail;
+use FindBin '$RealBin';
 use Getopt::Std;
 use Module::Refresh;
-use File::Tail;
 
 our $opt_p;
 getopt('p');
@@ -105,17 +107,17 @@ my $ssl         = $profiles{$myprofile}{ssl}         || 0;
 my $auth        = $profiles{$myprofile}{auth}        || 0;
 my @mychantypes = defined @{$profiles{$myprofile}{chantypes}} ? @{$profiles{$myprofile}{chantypes}} : qw(# &);
 
-$myaddr4      = $profiles{$myprofile}{addr4}        if defined $profiles{$myprofile}{addr4};
-$myaddr6      = $profiles{$myprofile}{addr6}        if defined $profiles{$myprofile}{addr6};
-@myadmins     = @{$profiles{$myprofile}{admins}}    if defined @{$profiles{$myprofile}{admins}};
-$myadminpass  = $profiles{$myprofile}{adminpass}    if defined $profiles{$myprofile}{adminpass};
-$myhelptext   = $profiles{$myprofile}{helptext}     if defined $profiles{$myprofile}{helptext};
-@mymodules    = @{$profiles{$myprofile}{modules}}   if defined @{$profiles{$myprofile}{modules}};
-$mytrigger    = $profiles{$myprofile}{trigger}      if defined $profiles{$myprofile}{trigger};
-$public       = $profiles{$myprofile}{public}       if defined $profiles{$myprofile}{public};
-$rawlog       = $profiles{$myprofile}{rawlog}       if defined $profiles{$myprofile}{rawlog};
-$rejoinonkick = $profiles{$myprofile}{rejoinonkick} if defined $profiles{$myprofile}{rejoinonkick};
-$silent       = $profiles{$myprofile}{silent}       if defined $profiles{$myprofile}{silent};
+$myaddr4      = $profiles{$myprofile}{addr4}        if (defined $profiles{$myprofile}{addr4});
+$myaddr6      = $profiles{$myprofile}{addr6}        if (defined $profiles{$myprofile}{addr6});
+@myadmins     = @{$profiles{$myprofile}{admins}}    if (defined @{$profiles{$myprofile}{admins}});
+$myadminpass  = $profiles{$myprofile}{adminpass}    if (defined $profiles{$myprofile}{adminpass});
+$myhelptext   = $profiles{$myprofile}{helptext}     if (defined $profiles{$myprofile}{helptext});
+@mymodules    = @{$profiles{$myprofile}{modules}}   if (defined @{$profiles{$myprofile}{modules}});
+$mytrigger    = $profiles{$myprofile}{trigger}      if (defined $profiles{$myprofile}{trigger});
+$public       = $profiles{$myprofile}{public}       if (defined $profiles{$myprofile}{public});
+$rawlog       = $profiles{$myprofile}{rawlog}       if (defined $profiles{$myprofile}{rawlog});
+$rejoinonkick = $profiles{$myprofile}{rejoinonkick} if (defined $profiles{$myprofile}{rejoinonkick});
+$silent       = $profiles{$myprofile}{silent}       if (defined $profiles{$myprofile}{silent});
 
 $myhelptext =~ s/TRIGGER/$mytrigger/g;
 
@@ -174,7 +176,7 @@ my $nicktries = 0;
 
 if ($useoident) {
    open my $oident, '>', "$ENV{HOME}/.oidentd.conf" || croak $!;
-   printf $oident 'global { reply "%s" }', $myuser;
+   print $oident 'global { reply "' . $myuser . '" }';
    close $oident;
 }
 
@@ -195,7 +197,7 @@ while (my @raw = split(' ', <$socket>)) {
    local $/ = "\r\n";
 
    chomp(@raw);
-   print("<- @raw\n") if $rawlog;
+   print("<- @raw\n") if ($rawlog);
 
    local $/ = "\n";
 
@@ -281,7 +283,7 @@ while (my @raw = split(' ', <$socket>)) {
    }
 
    push(@lastraw, "@raw");
-   shift(@lastraw) if ($#lastraw >= 3)
+   shift(@lastraw) if ($#lastraw >= 3);
 }
 
 callhook('on_ownquit');
@@ -293,7 +295,7 @@ else {
    printf("[%s] *** %s: dirty exit\n", scalar localtime, $mynick);
 
    unless ($rawlog) {
-      print("<- $_\n") for @lastraw;
+      print("<- $_\n") for (@lastraw);
    }
 }
 
@@ -302,7 +304,7 @@ else {
 sub acceptadmins {
    my %uniq;
 
-   $uniq{(split('!', $_))[0]}++ for @myadmins;
+   $uniq{(split('!', $_))[0]}++ for (@myadmins);
    acceptuser($_) for keys(%uniq);
 }
 
@@ -317,7 +319,7 @@ sub acceptuser {
 sub ack {
    my $target = shift;
 
-   msg($target, 'done {::%s}', caller) unless $silent;
+   msg($target, 'done {::%s}', caller) unless ($silent);
 }
 
 sub act {
@@ -325,7 +327,7 @@ sub act {
    my $act    = sprintf(shift, @_);
 
    for (split(/\n|(.{$splitlen})/, $act)) {
-      raw("PRIVMSG %s :\001ACTION %s\001", $target, $_) if (defined $_);
+      msg($target, '%sACTION %s %s', chr(1), $_, chr(1)) if (defined $_);
    }
 }
 
@@ -369,10 +371,10 @@ sub callhook {
    );
 
    if (exists $subs{$sub}) {
-      &{$subs{$sub}}(@args) if defined &{$subs{$sub}};
+      &{$subs{$sub}}(@args) if (defined &{$subs{$sub}});
 
       for (values(%modules)) {
-         $_->$sub(@args) if $_->can($sub);
+         $_->$sub(@args) if ($_->can($sub));
       }
    }
 }
@@ -412,16 +414,16 @@ sub err {
 sub hlp {
    my ($target, $string) = @_;
 
-   msg($target, 'help: %s {::%s}', $string, caller(0)) unless $silent;
+   msg($target, 'help: %s {::%s}', $string, caller(0)) unless ($silent);
 }
 
 sub ircgate {
-   my $file = "$ircgatedir/$myprofile";
+   my $file = $ircgatedir . '/' . $myprofile;
 
    if (-e $file) {
       printf("[%s] === ircgate: available!\n", scalar localtime);
 
-      my $tail = File::Tail->new(name => $file, maxinterval => 1);
+      my $tail = File::Tail->new(name => $file, reset_tail => 0, maxbuf => 576, maxinterval => 1);
 
       while (defined(my $line = $tail->read)) {
          my @data = split(' ', $line);
@@ -440,7 +442,7 @@ sub ircgate {
                }
                else {
                   printf("[%s] === ircgate: module [%s] %s(%s)\n", scalar localtime, $gatemod, $gatesub, join(' ', @data));
-                  $gatemod->$gatesub(@data) if $gatemod->can($gatesub);
+                  $gatemod->$gatesub(@data) if ($gatemod->can($gatesub));
                }
             }
          }
@@ -476,7 +478,7 @@ sub kick {
    my ($chan, $victim, $reason) = @_;
    my %uniq;
 
-   $uniq{(split('!', $_))[0]}++ for @myadmins;
+   $uniq{(split('!', $_))[0]}++ for (@myadmins);
 
    if (exists $uniq{$victim}) {
       printf("[%s] === Refusing to kick admin [%s] on %s\n", scalar localtime, $victim, $chan);
@@ -498,10 +500,10 @@ sub loadmodules {
       printf("[%s] === Loading module [%s]\n", scalar localtime, $_);
 
       unless (exists $modules{$_}) {
-         my $module = "$RealBin/modules/$_.pm";
+         my $module = $RealBin . '/modules/' . $_ . '.pm';
 
          if (-e $module) {
-            unless (system("/usr/bin/env perl -c $module > /dev/null 2>&1")) {
+            unless (system('/usr/bin/env perl -c ' . $module . '> /dev/null 2>&1')) {
                eval { require $module };
 
                unless ($@) {
@@ -519,25 +521,24 @@ sub loadmodules {
                   );
                }
                else {
-                  chomp $@;
-                  carp("$@");
+                  carp($@);
                   printf("[%s] === Failed to load module [%s]\n", scalar localtime, $_);
-                  err($target, "[$_] was not loaded due to an unhandled exception, check log") if $target;
+                  err($target, "[$_] was not loaded due to an unhandled exception, check log") if ($target);
                }
             }
             else {
                printf("[%s] === Failed to load erroneous module [%s]\n", scalar localtime, $_);
-               err($target, "[$_] was not loaded because it is erroneous") if $target;
+               err($target, "[$_] was not loaded because it is erroneous") if ($target);
             }
          }
          else {
             printf("[%s] === Failed to load non-existing module [%s]\n", scalar localtime, $_);
-            err($target, "[$_] was not loaded because it does not exist") if $target;
+            err($target, "[$_] was not loaded because it does not exist") if ($target);
          }
       }
       else {
           printf("[%s] === Failed to load already loaded module [%s]\n", scalar localtime, $_);
-          err($target, "[$_] was not loaded because it is already loaded") if $target;
+          err($target, "[$_] was not loaded because it is already loaded") if ($target);
       }
    }
 }
@@ -597,7 +598,7 @@ sub raw {
    my $raw = sprintf(shift, @_) || return;
 
    print($socket "$raw\r\n");
-   print("-> $raw\n") if $rawlog;
+   print("-> $raw\n") if ($rawlog);
 }
 
 sub settopic {
@@ -620,20 +621,20 @@ sub unloadmodules {
    for (@$tounload) {
       if (exists $modules{$_}) {
          printf("[%s] === Unloading module [%s]\n", scalar localtime, $_);
-         $_->on_unload if $_->can('on_unload');
-         $refresher->unload_module("$RealBin/modules/$_.pm");
+         $_->on_unload if ($_->can('on_unload'));
+         $refresher->unload_module($RealBin . '/modules/' . $_ . '.pm');
          delete $modules{$_};
       }
       else {
          printf("[%s] === Can not unload inactive module [%s]\n", scalar localtime, $_);
-         err($target, "[$_] was not unloaded because it was not active") if $target;
+         err($target, "[$_] was not unloaded because it was not active") if ($target);
       }
    }
 }
 
 sub quit {
    $connected = 0;
-   raw('QUIT :k');
+   raw('QUIT :obai!');
 }
 
 #### main hooks
@@ -641,7 +642,7 @@ sub quit {
 sub on_connected {
    printf("[%s] *** Connected to %s:%d [IPv6: %d, SSL: %d] as \"%s\"\n", scalar localtime, $server, $port, $ipv6, $ssl, $mynick);
    $connected = 1;
-   raw('MODE %s %s', $mynick, $mydefumode) if $mydefumode;
+   raw('MODE %s %s', $mynick, $mydefumode) if ($mydefumode);
 
    if ($auth) {
       authenticate();
@@ -732,8 +733,8 @@ sub on_nickinuse {
       $mynick = $myaltnick;
       raw('NICK %s', $mynick);
       $nicktries++;
-      $auth = 0 unless $authaltnick;
-      croak("All nicknames already in use") if $nicktries > 1;
+      $auth = 0 unless ($authaltnick);
+      croak("All nicknames already in use") if ($nicktries > 1);
    }
 }
 
@@ -789,21 +790,31 @@ sub on_part {
 sub on_privmsg {
    my ($target, $msg, $ischan, $nick, undef, undef, $who) = @_;
 
-   if (substr($msg, 0, 1) eq $mytrigger) {
+   if (substr($msg, 0, 1) eq chr(1)) {
+      if ($msg eq chr(1) . 'VERSION' . chr(1)) {
+         printf("[%s] *** CTCP VERSION request by %s\n", scalar localtime, $nick);
+         ntc($nick, '%sVERSION bot.pl %s on UNIX%s', chr(1), $version, chr(1));
+      }
+      elsif ($msg eq chr(1) . 'SOURCE' . chr(1)) {
+         printf("[%s] *** CTCP SOURCE request by %s\n", scalar localtime, $nick);
+         ntc($nick, '%sSOURCE https://github.com/nwohlgem/ircbot%s', chr(1), chr(1));
+      }
+   }
+   elsif (substr($msg, 0, 1) eq $mytrigger) {
       my @args = split(' ', $msg);
       my @cargs = map { uc } @args;
       my $cmd = substr(shift(@cargs), 1);
       shift(@args);
 
-      $target = $nick unless $ischan;
+      $target = $nick unless ($ischan);
 
       if ($who ~~ @myadmins) {
          if ($cmd eq 'AUTH') {
             if ($args[0]) {
                if ($args[0] eq $myadminpass) {
                   unless ($authedadmins{$who}) {
-                     $authedadmins{$who}++;
                      printf("[%s] *** Admin [%s] successfully authenticated\n", scalar localtime, $who);
+                     $authedadmins{$who}++;
                      ntc($nick, 'Successfully authenticated [%s]', $who);
                   }
                   else {
@@ -818,7 +829,7 @@ sub on_privmsg {
       }
 
       # admin cmds
-      return unless isadmin($who);
+      return unless (isadmin($who));
 
       if ($cmd eq 'MODULE' || $cmd eq 'MOD') {
          my @syntax = ('syntax: MODULE(MOD) LIST(LS)', 'syntax: MODULE(MOD) LOAD(L)|UNLOAD(U)|RELOAD(R) ALL|<name> [<name>]...');
@@ -828,7 +839,7 @@ sub on_privmsg {
                my $tolist;
 
                for (keys(%modules)) {
-                  $tolist .= "$_, ";
+                  $tolist .= $_ . ', ';
                }
 
                if ($tolist) {
@@ -886,11 +897,11 @@ sub on_privmsg {
                }
             }
             elsif ($cargs[0] eq 'HELP') {
-               hlp($target, $_) for @syntax;
+               hlp($target, $_) for (@syntax);
             }
          }
          elsif (!$args[0]) {
-            hlp($target, $_) for @syntax;
+            hlp($target, $_) for (@syntax);
          }
       }
    }
@@ -899,14 +910,14 @@ sub on_privmsg {
 sub on_quit {
    my ($nick, undef) = @_;
 
-   delete $mychannels{$myprofile}{$_}{$nick} for keys(%{$mychannels{$myprofile}});
+   delete $mychannels{$myprofile}{$_}{$nick} for (keys(%{$mychannels{$myprofile}}));
 }
 
 sub on_umodeg {
    my $nick = shift || return;
    my %uniq;
 
-   $uniq{(split('!', $_))[0]}++ for @myadmins;
+   $uniq{(split('!', $_))[0]}++ for (@myadmins);
    acceptuser($nick) if (exists $uniq{$nick});
 }
 
