@@ -91,7 +91,7 @@ sub finalizejoin {
          my $nick = (split(/!/, $invitechannels{joinlist}{$$myprofile}{$chan}))[0];
 
          if ($$myhelptext) {
-            main::msg($chan, q{Hello there! I was invited by %s. My trigger is '%s', more info is available by using '%shelp'. Most commands work in query too.}, $nick, $$mytrigger, $$mytrigger);
+            main::msg($chan, q{Hello there! I was invited by %s. My trigger is '%s', more info is available by using '%shelp'.}, $nick, $$mytrigger, $$mytrigger);
          }
          else {
             main::msg($chan, 'Hello there! I was invited by %s.', $nick);

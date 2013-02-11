@@ -4,7 +4,7 @@
 # 
 # Copyright 2012, Nico R. Wohlgemuth <nico@lifeisabug.com>
 
-my $version = '1.0';
+my $version = '1.1';
 
 use utf8;
 use strict;
@@ -223,16 +223,25 @@ while (my @raw = split(' ', <$socket>)) {
          # target, msg, ischan, nick, user, host, who
       }
       when ('JOIN') {
-        callhook('on_join', (split('!', substr($raw[0], 1)))[0], lc((substr($raw[2], 0, 1) eq ':') ? substr($raw[2], 1) : $raw[2]));
-        # nick, channel
+         my $who = substr($raw[0], 1);
+         my ($nick, $user, $host) = split(/[!@]/, $who);
+
+         callhook('on_join', lc((substr($raw[2], 0, 1) eq ':') ? substr($raw[2], 1) : $raw[2]), $nick, $user, $host, $who);
+         # channel, nick, user, host, who
       }
       when ('PART') {
-         callhook('on_part', (split('!', substr($raw[0], 1)))[0], lc($raw[2]));
-         # nick, channel
+         my $who = substr($raw[0], 1);
+         my ($nick, $user, $host) = split(/[!@]/, $who);
+
+         callhook('on_part', lc($raw[2]), $nick, $user, $host, $who, $raw[3] ? substr(join(' ', @raw[3..$#raw]), 1) : '');
+         # channel, nick, user, host, who, msg
       }
       when ('QUIT') {
-         callhook('on_quit', (split('!', substr($raw[0], 1)))[0], substr(join(' ', @raw[2..$#raw]), 1));
-         # nick, msg
+         my $who = substr($raw[0], 1);
+         my ($nick, $user, $host) = split(/[!@]/, $who);
+
+         callhook('on_quit', $nick, $user, $host, $who, $raw[2] ? substr(join(' ', @raw[2..$#raw]), 1) : '');
+         # nick, user, host, who, msg
       }
       when ('MODE') {
          my $ischan = ischan(substr($raw[2], 0, 1));
@@ -261,6 +270,20 @@ while (my @raw = split(' ', <$socket>)) {
       when ('366') {
          callhook('on_synced', lc($raw[3]));
          # chan
+      }
+      when ('302') {
+         for (split(/ /, substr(join(' ', @raw[3..$#raw]), 1))) {
+            my $ircop = 0;
+            my ($nick, $userhost) = split(/=/, $_);
+            if (substr($nick, -1) eq '*') {
+               $ircop = 1;
+               chop($nick);
+            }
+            my ($user, $host) = split(/@/, substr($userhost, 1));
+            my $who = $nick . '!' . $user . '@' . $host;
+            callhook('on_userhost', $ircop, $nick, $user, $host, $who);
+            # ircop, nick, user, host, who
+         }
       }
       when ('718') {
          callhook('on_umodeg', (split(/\[/, $raw[3]))[0]);
@@ -368,6 +391,7 @@ sub callhook {
       on_quit      => \&on_quit,
       on_synced    => \&on_synced,
       on_umodeg    => \&on_umodeg,
+      on_userhost  => \&on_userhost,
    );
 
    if (exists $subs{$sub}) {
@@ -659,7 +683,7 @@ sub on_isupport {
 }
 
 sub on_join {
-   my ($nick, $chan) = @_;
+   my ($chan, $nick, undef, undef, undef) = @_;
 
    if ($nick eq $mynick) {
       callhook('on_ownjoin', $chan);
@@ -777,7 +801,7 @@ sub on_ownpart {
 }
 
 sub on_part {
-   my ($nick, $chan) = @_;
+   my ($chan, $nick, undef, undef, undef, undef) = @_;
 
    delete $mychannels{$myprofile}{$chan}{$nick};
 
@@ -908,7 +932,12 @@ sub on_privmsg {
 }
 
 sub on_quit {
-   my ($nick, undef) = @_;
+   my ($nick, undef, undef, $who, undef) = @_;
+
+   if ($authedadmins{$who}) {
+      printf("[%s] *** Admin [%s] logged out (quit)\n", scalar localtime, $who);
+      delete $authedadmins{$who};
+   }
 
    delete $mychannels{$myprofile}{$_}{$nick} for (keys(%{$mychannels{$myprofile}}));
 }
