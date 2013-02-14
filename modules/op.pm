@@ -15,8 +15,8 @@ my $autoop = 1;
 my @opchans = qw(
 #example
 );
-my @ophosts = qw(
 
+my @ophosts = qw(
 example.com
 );
 

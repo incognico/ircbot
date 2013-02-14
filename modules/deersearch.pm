@@ -79,7 +79,7 @@ sub on_privmsg {
             mysql_disconnect();
 
             if (@$result) {
-               printf("[%s] === modules::%s: deers queried [%s] on %s by %s\n", scalar localtime, __PACKAGE__, $args[0], $target, $nick);
+               printf("[%s] === modules::%s: Deers queried [%s] on %s by %s\n", scalar localtime, __PACKAGE__, $args[0], $target, $nick);
 
                my $count = scalar(@$result);
                my $output;
@@ -88,14 +88,16 @@ sub on_privmsg {
                   $output .= $_->[0] . ', ';
                }
 
+               $output = substr($output, 0, -2);
+
                if ($count == 1) {
-                  main::msg($target, 'one happy deer: %s', substr($output, 0, -2));
+                  main::msg($target, 'one happy deer: %s', $output);
                }
                elsif ($count >= $maxresults) {
-                   main::msg($target, 'too many deers, have some: %s', substr($output, 0, -2));
+                   main::msg($target, 'too many deers, have some: %s', $output);
                }
                else {
-                  main::msg($target, '%u deers: %s', $count, substr($output, 0, -2));
+                  main::msg($target, '%u deers: %s', $count, $output);
                }
             }
             else {

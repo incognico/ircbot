@@ -21,20 +21,17 @@ sub new {
 
 sub on_privmsg {
    my ($self, $target, $msg, $ischan, $nick, undef, undef, undef) = @_;
-  
+
    # cmds
    if ($msg =~ /^((?:\[\s\]\s[^\[\]]+\s?)+)/) {
+      $target = $nick if ($ischan);
+
       my (@x, $y);
 
       $msg =~ s/(\[\s\]\s[^\[\]]+)+?\s?/push @x,$1/eg;
       $x[int(rand(@x))] =~ s/\[\s\]/[x]/;
 
-      if ($ischan) {
-         main::msg($target, "$nick: @x");
-      }
-      else {
-         main::msg($nick, "@x");
-      }
+      main::msg($target, "@x");
    }
 }
 

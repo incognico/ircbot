@@ -45,13 +45,13 @@ sub on_privmsg {
       my @args = split(' ', $msg);
       my $cmd = uc(substr(shift(@args), 1));
 
-      $target = $nick unless $ischan;
+      $target = $nick unless ($ischan);
 
       # cmds
       if ($cmd eq 'CURSE') {
          my $text;
 
-         $text .= $curses[int(rand(@curses))] . ' ' for 1..3;
+         $text .= $curses[int(rand(@curses))] . ' ' for (1..3);
          main::msg($target, $text);
       }
    }

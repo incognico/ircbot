@@ -56,9 +56,9 @@ sub on_privmsg {
       my @args = split(' ', $msg);
       my $cmd = uc(substr(shift(@args), 1));
 
-      return unless main::isadmin($who);
+      return unless (main::isadmin($who));
 
-      $target = $nick unless $ischan;
+      $target = $nick unless ($ischan);
 
       # cmds
       if ($cmd eq 'DEERKILL' || $cmd eq 'DK') {
@@ -72,7 +72,7 @@ sub on_privmsg {
 
             unless ($rows == 0) {
                printf("[%s] === modules::%s: deer killed [%s] on %s by %s\n", scalar localtime, __PACKAGE__, $args[0], $target, $nick);
-               main::msg($target, '%d deer(s) killed', $rows);
+               main::msg($target, '%d deer killed', $rows);
             }
             else {
                 main::msg($target, 'no deers killed');

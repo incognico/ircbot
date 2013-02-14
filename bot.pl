@@ -862,7 +862,7 @@ sub on_privmsg {
             if ($cargs[0] eq 'LIST' || $cargs[0] eq 'LS') {
                my $tolist;
 
-               for (keys(%modules)) {
+               for (sort(keys(%modules))) {
                   $tolist .= $_ . ', ';
                }
 

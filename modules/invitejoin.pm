@@ -20,12 +20,13 @@ my $changed = 0;
 my $count = 0;
 my %antiflood;
 my %invitechannels;
+my %newjoins;
 my %recentkickchannels;
 
 ### start config
 
 my $cfgname  = "$ENV{HOME}/.bot/%s/%s.yml"; # package name, profile name
-my $minusers = 10;
+my $minusers = 8;
 
 ### end config
 
@@ -44,7 +45,7 @@ sub new {
 
    $cfg = sprintf($cfgname, __PACKAGE__, $$myprofile);
 
-   loadcfg() if -e $cfg;
+   loadcfg() if (-e $cfg);
 
    return $self;
 }
@@ -86,17 +87,17 @@ sub checksize {
 sub finalizejoin {
    my $chan = shift || return;
 
-   if (defined $invitechannels{joinlist}{$$myprofile}{$chan}) {
+   if (defined $newjoins{$$myprofile}{$chan}) {
       unless (checksize($chan)) {
-         my $nick = (split(/!/, $invitechannels{joinlist}{$$myprofile}{$chan}))[0];
-
          if ($$myhelptext) {
-            main::msg($chan, q{Hello there! I was invited by %s. My trigger is '%s', more info is available by using '%shelp'.}, $nick, $$mytrigger, $$mytrigger);
+            main::msg($chan, q{Hello there! I was invited by %s. My trigger is '%s', more info is available by using '%shelp'.}, $newjoins{$$myprofile}{$chan}, $$mytrigger, $$mytrigger);
          }
          else {
-            main::msg($chan, 'Hello there! I was invited by %s.', $nick);
+            main::msg($chan, 'Hello there! I was invited by %s.', $newjoins{$$myprofile}{$chan});
          }
       }
+
+      delete $newjoins{$$myprofile}{$chan};
    }
 }
 
@@ -135,6 +136,7 @@ sub on_invite {
                main::joinchan($chan);
 
                $invitechannels{joinlist}{$$myprofile}{$chan} = $who;
+               $newjoins{$$myprofile}{$chan} = $nick;
                $changed = 1;
             }
             else {
@@ -216,7 +218,7 @@ sub on_privmsg {
       # admin cmds
       return unless main::isadmin($who);
 
-      $target = $nick unless $ischan;
+      $target = $nick unless ($ischan);
 
       if ($cmd eq 'SET') {
          my $syntax = 'syntax: SET PUBLIC [ON|OFF]';
@@ -256,16 +258,16 @@ sub on_privmsg {
 
                if ($args[1]) {
                   if ($cargs[1] eq 'VERBOSE' || $cargs[1] eq 'V') {
-                     for (keys($invitechannels{joinlist}{$$myprofile})) {
+                     for (sort(keys($invitechannels{joinlist}{$$myprofile}))) {
                         $count++;
                         main::msg($target, '%s - %u - %s', $_, scalar keys %{$mychannels->{$$myprofile}{$_}}, $invitechannels{joinlist}{$$myprofile}{$_});
                      }
                   }
                }
                elsif (!$args[1]) {
-                  for (keys($invitechannels{joinlist}{$$myprofile})) {
+                  for (sort(keys($invitechannels{joinlist}{$$myprofile}))) {
                      $count++;
-                     $chans .= sprintf("%s, ", $_);
+                     $chans .= $_ . ', ';
                   }
 
                   if ($count > 0) {
@@ -299,9 +301,9 @@ sub on_privmsg {
                my $chans;
                my $count = 0;
 
-               for (keys($invitechannels{blacklist}{$$myprofile})) {
+               for (sort(keys($invitechannels{blacklist}{$$myprofile}))) {
                   $count++;
-                  $chans .= sprintf("%s, ", $_);
+                  $chans .= $_ . ', ';
                }
 
                if ($chans) {
@@ -370,7 +372,7 @@ sub on_privmsg {
                   my $blacklisted;
 
                   for (split(' ', main::chantrim("@args[1..$#args]"))) {
-                     $blacklisted .= sprintf("%s ,", $_) if exists $invitechannels{blacklist}{$$myprofile}{$_};
+                     $blacklisted .= $_ . ', ' if (exists $invitechannels{blacklist}{$$myprofile}{$_});
                   }
 
                   if ($blacklisted) {

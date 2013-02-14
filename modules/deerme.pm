@@ -91,17 +91,17 @@ sub on_privmsg {
    if ($msg =~ /^deer (.+)/) {
       my ($creator, $irccode, $deer, $special) = fetchdeer($1);
 
-      if ($creator == 2) {
+      if ($creator eq 2) {
          main::err($target, 'database error');
       }
-      elsif ($creator == 1) {
+      elsif ($creator eq 1) {
          main::msg($target, '404 Deer Not Found. Go to %s and create it.', $deeritor);
       }
       else {
          printf("[%s] === modules::%s: Deer [%s] on %s for %s\n", scalar localtime, __PACKAGE__, $1, $target, $nick);
 
          main::msg($target, $irccode);
-         main::msg($target, '%s by %s', $deer, $creator) if $special;
+         main::msg($target, '%s by %s', $deer, $creator) if ($special);
 
          $prevdeers{$target}{deer}    = $deer;
          $prevdeers{$target}{creator} = $creator;

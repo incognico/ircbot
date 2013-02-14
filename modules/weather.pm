@@ -74,7 +74,7 @@ sub new {
 
    $cfg = sprintf($cfgname, __PACKAGE__, $$myprofile);
 
-   loadcfg() if -e $cfg;
+   loadcfg() if (-e $cfg);
 
    return $self;
 }
@@ -109,7 +109,7 @@ sub on_privmsg {
       my @args = split(' ', $msg);
       my $cmd = uc(substr(shift(@args), 1));
 
-      $target = $nick unless $ischan;
+      $target = $nick unless ($ischan);
 
       # cmds 
       if ($cmd eq 'WEATHER' || $cmd eq 'W') {
@@ -127,7 +127,7 @@ sub on_privmsg {
             }
          }
          else {
-            my $geo   = Geo::Coder::Google->new(apiver => 3);
+            my $geo   = Geo::Coder::Google->new(apiver => 3, language => 'en');
             my $input = $geo->geocode(location => "@args");
 
             unless ($input) {
@@ -148,9 +148,9 @@ sub on_privmsg {
 
          printf("[%s] === modules::%s: Weather [%s] on %s by %s\n", scalar localtime, __PACKAGE__, $loc, $target, $nick);
 
-         my $fcloc = Weather::YR::Locationforecast->new({latitude => $lat, longitude => $lon});
+         my $fcloc = Weather::YR::Locationforecast->new(latitude => $lat, longitude => $lon);
          my $fc    = $fcloc->forecast;
-
+            
          my $celcius   = $fc->[0]->{temperature}->{value};
          my $farenheit = $celcius * (9/5) + 32;
          my $symbol    = $fc->[1]->{name};

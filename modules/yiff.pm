@@ -48,7 +48,7 @@ sub new {
 ### hooks
 
 sub on_join {
-   my ($self, $nick, $chan) = @_;
+   my ($self, $chan, $nick, undef, undef, undef) = @_;
 
    unless ($nick eq $$mynick) {
       my $user = $mychannels->{$$myprofile}{$chan}{(keys $mychannels->{$$myprofile}{$chan})[int rand keys $mychannels->{$$myprofile}{$chan}]};
@@ -62,6 +62,7 @@ sub on_join {
 
       if (rand(1) <= $percentage) {
          main::act($chan, $yiff);
+
          printf("[%s] === modules::%s: Yiffed [%s] on %s\n", scalar localtime, __PACKAGE__, $nick, $chan) unless $$rawlog;
       }
    }

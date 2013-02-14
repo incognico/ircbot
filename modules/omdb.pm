@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 use JSON;
-use LWP::Simple;
+use LWP::UserAgent;
 use URI::Escape;
 
 my $mytrigger;
@@ -30,7 +30,7 @@ sub on_privmsg {
       my @args = split(' ', $msg);
       my $cmd = uc(substr(shift(@args), 1));
       
-      $target = $nick unless $ischan;
+      $target = $nick unless ($ischan);
 
       # cmds
       if ($cmd =~ /^([IO]MDB|FILM|FLICK|MOVIE|RT)$/) {
@@ -47,23 +47,27 @@ sub on_privmsg {
             $url .= '&' . $type . '=' . $title;
             $url .= '&y=' . $year if ($year);
 
-            my $json = get($url);
-            my $omdb = decode_json($json);
+            my $ua       = LWP::UserAgent->new;
+            my $response = $ua->get($url);
 
-            unless ($omdb) {
-               main::err($target, 'api failure');
-            }
-            elsif ($$omdb{Response} eq 'True') {
-               $$omdb{Plot} = substr($$omdb{Plot}, 0, 148) . '...' if (length($$omdb{Plot}) > 150);
+            if ($response->is_success) {
+               my $omdb = decode_json($response->decoded_content);
 
-               for (qw(imdbRating imdbVotes tomatoMeter tomatoRating tomatoFresh tomatoRotten tomatoUserRating tomatoUserReviews)) {
-                  $$omdb{$_} = '?' if ($$omdb{$_} eq 'N/A');
+               if ($$omdb{Response} eq 'True') {
+                  $$omdb{Plot} = substr($$omdb{Plot}, 0, 148) . '...' if (length($$omdb{Plot}) > 150);
+
+                  for (qw(imdbRating imdbVotes tomatoMeter tomatoRating tomatoFresh tomatoRotten tomatoUserRating tomatoUserReviews)) {
+                     $$omdb{$_} = '?' if ($$omdb{$_} eq 'N/A');
+                  }
+
+                  main::msg($target, '%s (%s) :: http://imdb.com/title/%s :: Plot: %s :: Genre: %s :: IMDB: %s/10 (%s) RT: %s%%, %s/10 (+%s/-%s) User: %s/5 (%s)', $$omdb{Title}, $$omdb{Year}, $$omdb{imdbID}, $$omdb{Plot}, $$omdb{Genre}, $$omdb{imdbRating}, $$omdb{imdbVotes}, $$omdb{tomatoMeter}, $$omdb{tomatoRating}, $$omdb{tomatoFresh}, $$omdb{tomatoRotten}, $$omdb{tomatoUserRating}, $$omdb{tomatoUserReviews});
                }
-
-               main::msg($target, '%s (%s) :: http://imdb.com/title/%s :: Plot: %s :: Genre: %s :: IMDB: %s/10 (%s) RT: %s%%, %s/10 (+%s/-%s) User: %s/5 (%s)', $$omdb{Title}, $$omdb{Year}, $$omdb{imdbID}, $$omdb{Plot}, $$omdb{Genre}, $$omdb{imdbRating}, $$omdb{imdbVotes}, $$omdb{tomatoMeter}, $$omdb{tomatoRating}, $$omdb{tomatoFresh}, $$omdb{tomatoRotten}, $$omdb{tomatoUserRating}, $$omdb{tomatoUserReviews});
+               else {
+                  main::msg($target, 'no match');
+               }
             }
             else {
-               main::msg($target, 'no match');
+               main::err($target, 'api failure');
             }
          }
          else {

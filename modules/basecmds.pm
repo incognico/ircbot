@@ -48,11 +48,11 @@ sub on_privmsg {
       my $cmd = substr(shift(@cargs), 1);
       shift(@args);
 
-      $target = $nick unless $ischan;
+      $target = $nick unless ($ischan);
 
       # cmds
       if ($cmd eq 'HELP') {
-         main::msg($target, $$myhelptext) if $$myhelptext;
+         main::msg($target, $$myhelptext) if ($$myhelptext);
       }
 
       # admin cmds
@@ -158,7 +158,7 @@ sub on_privmsg {
                }
             }
 
-            main::ack($target) if $joined;
+            main::ack($target) if ($joined);
          }
          else {
             main::hlp($target, 'syntax: JOIN <channel>');
@@ -179,7 +179,7 @@ sub on_privmsg {
                }
             }
 
-            main::ack($target) if $parted;
+            main::ack($target) if ($parted);
          }
          else {
             if (main::ischan($target)) {
@@ -196,9 +196,9 @@ sub on_privmsg {
                my $chans;
                my $count = 0;
 
-               for (keys(%{$mychannels->{$$myprofile}})) {
+               for (sort(keys(%{$mychannels->{$$myprofile}}))) {
                   $count++;
-                  $chans .= sprintf("%s, ", $_);
+                  $chans .= $_ . ', ';
                }
 
                if ($count > 0) {
@@ -216,9 +216,9 @@ sub on_privmsg {
                         my $names;
                         my $count = 0;
 
-                        for (keys(%{$mychannels->{$$myprofile}{$args[1]}})) {
+                        for (sort(keys(%{$mychannels->{$$myprofile}{$args[1]}}))) {
                            $count++;
-                           $names .= sprintf("%s, ", $_);
+                           $names .= $_ . ', ';
                         }
 
                         if ($count > 0) {
@@ -249,7 +249,7 @@ sub on_privmsg {
       elsif ($cmd eq 'MSG') {
          if ($args[1]) {
             main::msg($args[0], join(' ', @args[1..$#args]));
-            main::ack($target) unless $args[0] eq $target;
+            main::ack($target) unless ($args[0] eq $target);
          }
          else {
             main::hlp($target, 'syntax: MSG <target> <text>');
@@ -258,7 +258,7 @@ sub on_privmsg {
       elsif ($cmd eq 'ACT') {
          if ($args[1]) {
             main::act($args[0], join(' ', @args[1..$#args]));
-            main::ack($target) unless $args[0] eq $target;
+            main::ack($target) unless ($args[0] eq $target);
          }
          else {
             main::hlp($target, 'syntax: ACT <target> <text>');
@@ -267,7 +267,7 @@ sub on_privmsg {
       elsif ($cmd eq 'NTC') {
          if ($args[1]) {
             main::ntc($args[0], join(' ', @args[1..$#args]));
-            main::ack($target) unless $args[0] eq $target;
+            main::ack($target) unless ($args[0] eq $target);
          }
          else {
             main::hlp($target, 'syntax: NTC <target> <text>');

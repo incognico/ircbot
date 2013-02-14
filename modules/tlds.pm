@@ -16,7 +16,7 @@ my $csv = sprintf("$ENV{HOME}/.bot/%s/%s.csv", __PACKAGE__, __PACKAGE__);
 ### end config
 
 unless (open my $fh, '<', $csv) {
-return;
+   return;
 }
 else {
    while (my $line = <$fh>) {
@@ -47,7 +47,7 @@ sub on_privmsg {
       my @args = split(' ', $msg);
       my $cmd = uc(substr(shift(@args), 1));
 
-      $target = $nick unless $ischan;
+      $target = $nick unless ($ischan);
 
       # cmds
       if ($cmd eq 'TLD') {
