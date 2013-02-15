@@ -8,6 +8,7 @@ use feature 'switch';
 
 my $mytrigger;
 
+use Encode;
 use HTML::Entities;
 use JSON;
 use LWP::UserAgent;
@@ -28,7 +29,7 @@ sub new {
 sub shorten {
    my $url = shift;
 
-   if ($url && length($url) > 48) {
+   if ($url && length($url) > 100) {
       my $short;
       eval { $short = makeashorterlink($url) };
       
@@ -70,11 +71,11 @@ sub on_privmsg {
                my $ddg = decode_json($response->decoded_content);  
                my $ans = $$ddg{Answer};
                my $def = $$ddg{Definition};
-               my $rdr = uri_unescape($$ddg{Redirect});
+               my $rdr = decode('UTF-8', uri_unescape($$ddg{Redirect}));
                my $src = $$ddg{AbstractSource};
                my $tpe = $$ddg{Type};
                my $txt = decode_entities($$ddg{AbstractText});
-               my $url = uri_unescape($$ddg{AbstractURL});
+               my $url = decode('UTF-8', uri_unescape($$ddg{AbstractURL}));
 
                map { s/<[^>]*>//g; s/\s+/ /g; s/%/%%/g } ($ans, $def, $txt);
                $_ = shorten($_) for ($rdr, $url);
