@@ -4,7 +4,7 @@
 # 
 # Copyright 2012, Nico R. Wohlgemuth <nico@lifeisabug.com>
 
-my $version = '1.1';
+our $version = '1.2';
 
 use utf8;
 use strict;
@@ -119,11 +119,12 @@ $rawlog       = $profiles{$myprofile}{rawlog}       if (defined $profiles{$mypro
 $rejoinonkick = $profiles{$myprofile}{rejoinonkick} if (defined $profiles{$myprofile}{rejoinonkick});
 $silent       = $profiles{$myprofile}{silent}       if (defined $profiles{$myprofile}{silent});
 
-$myhelptext =~ s/TRIGGER/$mytrigger/g;
+$myhelptext =~ s/TRIGGER/$mytrigger/g if ($myhelptext);
 
 my %authedadmins;
 my %mychannels;
 my %myumodes;
+my %rejoinchannels;
 
 my $myaddr;
 my $port;
@@ -245,6 +246,7 @@ while (my @raw = split(' ', <$socket>)) {
       }
       when ('MODE') {
          my $ischan = ischan(substr($raw[2], 0, 1));
+
          callhook('on_mode', $ischan ? lc($raw[2]) : $raw[2], $ischan, ((substr($raw[3], 0, 1) eq ':') ? substr($raw[3], 1) : $raw[3]));
          # target, ischan, mode
       }
@@ -254,6 +256,7 @@ while (my @raw = split(' ', <$socket>)) {
       }
       when ('INVITE') {
          my $who = substr($raw[0], 1);
+
          callhook('on_invite', (split('!', $who))[0], lc(((substr($raw[3], 0, 1) eq ':') ? substr($raw[3], 1) : $raw[3])), $who);
          # nick, channel, who
       }
@@ -272,18 +275,16 @@ while (my @raw = split(' ', <$socket>)) {
          # chan
       }
       when ('302') {
-         for (split(/ /, substr(join(' ', @raw[3..$#raw]), 1))) {
-            my $ircop = 0;
-            my ($nick, $userhost) = split(/=/, $_);
-            if (substr($nick, -1) eq '*') {
-               $ircop = 1;
-               chop($nick);
-            }
-            my ($user, $host) = split(/@/, substr($userhost, 1));
-            my $who = $nick . '!' . $user . '@' . $host;
-            callhook('on_userhost', $ircop, $nick, $user, $host, $who);
-            # ircop, nick, user, host, who
-         }
+         my $users = substr("@raw[3..$#raw]", 1);
+
+         $users =~ s/(.+?)(\*)?=[+-](.+?)@(.+?)(?: |$)/callhook('on_userhost', $2, $1, $3, $4, $1 . '!' . $3 . '@' . $4)/eg;
+         # oper, nick, user, host, who
+      }
+      when ('710') {
+         my ($nick, $user, $host) = split(/[!@]/, $raw[4]);
+
+         callhook('on_knock', $raw[3], $nick, $user, $host, $raw[4]);
+         # chan, nick, user, host, who
       }
       when ('718') {
          callhook('on_umodeg', (split(/\[/, $raw[3]))[0]);
@@ -292,6 +293,10 @@ while (my @raw = split(' ', <$socket>)) {
       when ('554') {
          callhook('on_umodeg', substr($raw[4], 1));
          # nick
+      }
+      when ('437') {
+         callhook('on_unavail', substr($raw[2], 1)) if (ischan($raw[2]));
+         # chan
       }
       when ([qw(432 433 434)]) {
          callhook('on_nickinuse');
@@ -373,24 +378,26 @@ sub callhook {
       on_autojoin  => \&on_autojoin,
       on_connected => \&on_connected,
       on_invite    => \&on_invite,
-      on_isupport  => \&on_isupport,
+      #on_isupport  => \&on_isupport,
       on_join      => \&on_join,
-      on_kick      => \&on_kick,
-      on_mode      => \&on_mode,
-      on_names     => \&on_names,
-      on_nick      => \&on_nick,
-      on_nickinuse => \&on_nickinuse,
-      on_notice    => \&on_notice,
-      on_ownjoin   => \&on_ownjoin,
+      #on_kick      => \&on_kick,
+      on_knock     => \&on_knock,
+      #on_mode      => \&on_mode,
+      #on_names     => \&on_names,
+      #on_nick      => \&on_nick,
+      #on_nickinuse => \&on_nickinuse,
+      #on_notice    => \&on_notice,
+      #on_ownjoin   => \&on_ownjoin,
       on_ownkick   => \&on_ownkick,
       on_ownpart   => \&on_ownpart,
       on_ownquit   => \&on_ownquit,
-      on_part      => \&on_part,
+      #on_part      => \&on_part,
       on_ping      => \&on_ping,
       on_privmsg   => \&on_privmsg,
-      on_quit      => \&on_quit,
+      #on_quit      => \&on_quit,
       on_synced    => \&on_synced,
-      on_umodeg    => \&on_umodeg,
+      #on_umodeg    => \&on_umodeg,
+      #on_unavail   => \&on_unavail,
       on_userhost  => \&on_userhost,
    );
 
@@ -676,10 +683,20 @@ sub on_connected {
    }
 }
 
+sub on_knock {
+   my ($chan, $nick, undef, undef, $who) = @_;
+
+   if (isadmin($who)) {
+      raw('INVITE %s %s', $nick, $chan);
+   }
+}
+
 sub on_isupport {
    my $isupport = shift || return;
 
-   acceptadmins() if ($isupport ~~ /CALLERID/);
+   if ($isupport ~~ /CALLERID/) {
+      acceptadmins();
+   }
 }
 
 sub on_join {
@@ -778,6 +795,8 @@ sub on_notice {
 sub on_ownjoin {
    my $chan = shift || return;
 
+   delete $rejoinchannels{$myprofile}{$chan};
+
    printf("[%s] *** Joined %s\n", scalar localtime, $chan);
 }
 
@@ -808,6 +827,12 @@ sub on_part {
    if ($nick eq $mynick) {
       callhook('on_ownpart', $chan)
       # channel
+   }
+}
+
+sub on_ping {
+   for (keys(%{$rejoinchannels{$myprofile}})) {
+      joinchan($_, $channels{$myprofile}{$_})
    }
 }
 
@@ -920,11 +945,66 @@ sub on_privmsg {
                   hlp($target, 'syntax: MODULE(MOD) RELOAD(R) ALL|<name> [<name>]...');
                }
             }
-            elsif ($cargs[0] eq 'HELP') {
+            else {
                hlp($target, $_) for (@syntax);
             }
          }
-         elsif (!$args[0]) {
+         else {
+            hlp($target, $_) for (@syntax);
+         }
+      }
+      elsif ($cmd eq 'REJOINS' || $cmd eq 'RJ') {
+         my @syntax = ('syntax: REJOINS(RJ) LIST(LS)', 'syntax: REJOINS(RJ) REMOVE(RM) ALL|<channel> [,<channel>]...');
+
+         if ($args[0]) {
+            if ($cargs[0] eq 'LIST' || $cargs[0] eq 'LS') {
+               my $tolist;
+
+               for (sort(keys($rejoinchannels{$myprofile}))) {
+                  $tolist .= $_ . ', ';
+               }
+
+               if ($tolist) {
+                  msg($target, substr($tolist, 0, -2));
+               }
+               else {
+                  msg($target, 'no channel rejoins active');
+               }
+            }
+            elsif ($cargs[0] eq 'REMOVE' || $cargs[0] eq 'RM') {
+               if ($args[1]) {
+                  if ($cargs[1] eq 'ALL') {
+                     my $count = scalar keys($rejoinchannels{$myprofile});
+                     
+                     delete $rejoinchannels{$myprofile};
+
+                     msg($target, '%u channels removed', $count);
+                  }
+                  else {
+                     my $removed = 0;
+
+                     for (split(' ', chantrim("@args[1..$#args]"))) {
+                        if (ischan($_)) {
+                           delete $rejoinchannels{$myprofile}{$_};
+                           $removed = 1;
+                        }
+                        else {
+                           err($target, '%s is not a valid channel', $_);
+                        }
+                     }
+
+                     ack($target) if ($removed);
+                  }
+               }
+               else {
+                  hlp($target, 'syntax: REJOINS(RJ) REMOVE(RM) ALL|<channel> [,<channel>]...');
+               }
+            }
+            else {
+               hlp($target, $_) for (@syntax);
+            }
+         }
+         else {
             hlp($target, $_) for (@syntax);
          }
       }
@@ -948,6 +1028,14 @@ sub on_umodeg {
 
    $uniq{(split('!', $_))[0]}++ for (@myadmins);
    acceptuser($nick) if (exists $uniq{$nick});
+}
+
+sub on_unavail {
+   my ($chan, $reason) = @_;
+
+   printf("[%s] *** Channel [%s] unavailable: %s -- retrying\n", scalar localtime, $chan, $reason);
+
+   $rejoinchannels{$myprofile}{$chan}++;
 }
 
 exit 0;

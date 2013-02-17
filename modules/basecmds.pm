@@ -150,7 +150,7 @@ sub on_privmsg {
             for (split(' ', main::chantrim("@args"))) {
                if (main::ischan($_)) {
                   main::joinchan($_);
-                  $channels->{$$myprofile}{$_} = $args[1] ? $args[1] : '';
+                  $channels->{$$myprofile}{$_} = '';
                   $joined = 1;
                }
                else {
@@ -161,7 +161,7 @@ sub on_privmsg {
             main::ack($target) if ($joined);
          }
          else {
-            main::hlp($target, 'syntax: JOIN <channel>');
+            main::hlp($target, 'syntax: JOIN <channel> [,<channel>]...');
          }
       }
       elsif ($cmd eq 'PART') {

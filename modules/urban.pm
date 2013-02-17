@@ -62,7 +62,7 @@ sub on_privmsg {
             }
          }
          else {
-            main::hlp($target, 'syntax: URBAN|UD|U <term>');
+            main::hlp($target, 'syntax: URBAN(UD|U) <term>');
          }
       }
    }

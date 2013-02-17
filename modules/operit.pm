@@ -42,9 +42,9 @@ sub on_privmsg {
 }
 
 sub on_userhost {
-   my ($self, $ircop, $nick, undef, undef, $who) = @_;
+   my ($self, $oper, $nick, undef, undef, $who) = @_;
 
-   if ($ircop && $operitqueue{$who}) {
+   if ($oper && $operitqueue{$who}) {
       main::raw('MODE %s +o %s', $operitqueue{$who}, $nick);
    }
 

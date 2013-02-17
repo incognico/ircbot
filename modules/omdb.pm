@@ -71,7 +71,7 @@ sub on_privmsg {
             }
          }
          else {
-            main::hlp($target, 'syntax: OMDB|IMDB|FILM|FLICK|MOVIE|RT <title> [year]');
+            main::hlp($target, 'syntax: OMDB(IMDB|FILM|FLICK|MOVIE|RT) <title> [year]');
          }
       }
    }

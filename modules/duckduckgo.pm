@@ -116,7 +116,7 @@ sub on_privmsg {
             }
          }
          else {
-            main::hlp($target, 'syntax: DDG|D <query>');
+            main::hlp($target, 'syntax: DDG(D) <query>');
          }
       }
    }
