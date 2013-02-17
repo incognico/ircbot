@@ -4,7 +4,7 @@
 # 
 # Copyright 2012, Nico R. Wohlgemuth <nico@lifeisabug.com>
 
-our $version = '1.2.1';
+our $version = '1.2.2';
 
 use utf8;
 use strict;
@@ -378,26 +378,26 @@ sub callhook {
       on_autojoin  => \&on_autojoin,
       on_connected => \&on_connected,
       on_invite    => \&on_invite,
-      #on_isupport  => \&on_isupport,
+      on_isupport  => \&on_isupport,
       on_join      => \&on_join,
-      #on_kick      => \&on_kick,
+      on_kick      => \&on_kick,
       on_knock     => \&on_knock,
-      #on_mode      => \&on_mode,
-      #on_names     => \&on_names,
-      #on_nick      => \&on_nick,
-      #on_nickinuse => \&on_nickinuse,
-      #on_notice    => \&on_notice,
-      #on_ownjoin   => \&on_ownjoin,
+      on_mode      => \&on_mode,
+      on_names     => \&on_names,
+      on_nick      => \&on_nick,
+      on_nickinuse => \&on_nickinuse,
+      on_notice    => \&on_notice,
+      on_ownjoin   => \&on_ownjoin,
       on_ownkick   => \&on_ownkick,
       on_ownpart   => \&on_ownpart,
       on_ownquit   => \&on_ownquit,
-      #on_part      => \&on_part,
+      on_part      => \&on_part,
       on_ping      => \&on_ping,
       on_privmsg   => \&on_privmsg,
-      #on_quit      => \&on_quit,
+      on_quit      => \&on_quit,
       on_synced    => \&on_synced,
-      #on_umodeg    => \&on_umodeg,
-      #on_unavail   => \&on_unavail,
+      on_umodeg    => \&on_umodeg,
+      on_unavail   => \&on_unavail,
       on_userhost  => \&on_userhost,
    );
 
@@ -785,8 +785,8 @@ sub on_notice {
    $msg = stripcodes($msg);
 
    if ($auth && $target eq $mynick && $who eq $authservackwho) {
-      if ($msg =~ /^$authservackstring/) {
-         printf("[%s] *** Successfully authenticated to %s as \"%s\"\n", scalar localtime, $authserv, $1 ? $1 : $mynick);
+      if ($msg =~ /^${authservackstring}$/) {
+         printf(qq{[%s] *** Successfully authenticated to %s as "%s"\n}, scalar localtime, $authserv, $1 ? $1 : $mynick);
          autojoin();
       }
    }
