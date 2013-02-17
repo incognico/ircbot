@@ -216,7 +216,7 @@ sub on_privmsg {
                         my $names;
                         my $count = 0;
 
-                        for (sort(keys(%{$mychannels->{$$myprofile}{$args[1]}}))) {
+                        for (sort {lc $a cmp lc $b} (keys(%{$mychannels->{$$myprofile}{$args[1]}}))) {
                            $count++;
                            $names .= $_ . ', ';
                         }
@@ -238,7 +238,7 @@ sub on_privmsg {
                   main::hlp($target, 'syntax: LIST(LS) NAMES <channel>');
                }
             }
-            elsif ($cargs[0] eq 'HELP') {
+            else {
                main::hlp($target, 'syntax: LIST(LS) CHANNELS(CHANS) | LIST(LS) NAMES <channel>');
             }
          }
