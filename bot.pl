@@ -4,7 +4,7 @@
 # 
 # Copyright 2012, Nico R. Wohlgemuth <nico@lifeisabug.com>
 
-our $version = '1.2';
+our $version = '1.2.1';
 
 use utf8;
 use strict;
@@ -228,14 +228,14 @@ while (my @raw = split(' ', <$socket>)) {
          my ($nick, $user, $host) = split(/[!@]/, $who);
 
          callhook('on_join', lc((substr($raw[2], 0, 1) eq ':') ? substr($raw[2], 1) : $raw[2]), $nick, $user, $host, $who);
-         # channel, nick, user, host, who
+         # chan, nick, user, host, who
       }
       when ('PART') {
          my $who = substr($raw[0], 1);
          my ($nick, $user, $host) = split(/[!@]/, $who);
 
          callhook('on_part', lc($raw[2]), $nick, $user, $host, $who, $raw[3] ? substr(join(' ', @raw[3..$#raw]), 1) : '');
-         # channel, nick, user, host, who, msg
+         # chan, nick, user, host, who, msg
       }
       when ('QUIT') {
          my $who = substr($raw[0], 1);
@@ -258,7 +258,7 @@ while (my @raw = split(' ', <$socket>)) {
          my $who = substr($raw[0], 1);
 
          callhook('on_invite', (split('!', $who))[0], lc(((substr($raw[3], 0, 1) eq ':') ? substr($raw[3], 1) : $raw[3])), $who);
-         # nick, channel, who
+         # nick, chan, who
       }
       when ('KICK') {
          callhook('on_kick', lc($raw[2]), $raw[3], (split('!', substr($raw[0], 1)))[0], substr(join(' ', @raw[4..$#raw]), 1));
@@ -283,7 +283,7 @@ while (my @raw = split(' ', <$socket>)) {
       when ('710') {
          my ($nick, $user, $host) = split(/[!@]/, $raw[4]);
 
-         callhook('on_knock', $raw[3], $nick, $user, $host, $raw[4]);
+         callhook('on_knock', lc($raw[3]), $nick, $user, $host, $raw[4]);
          # chan, nick, user, host, who
       }
       when ('718') {
@@ -295,7 +295,7 @@ while (my @raw = split(' ', <$socket>)) {
          # nick
       }
       when ('437') {
-         callhook('on_unavail', substr($raw[2], 1)) if (ischan($raw[2]));
+         callhook('on_unavail', lc(substr($raw[2], 1))) if (ischan($raw[2]));
          # chan
       }
       when ([qw(432 433 434)]) {
