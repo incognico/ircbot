@@ -238,7 +238,7 @@ sub on_privmsg {
                   main::hlp($target, 'syntax: LIST(LS) NAMES <channel>');
                }
             }
-            else {
+            elsif (!$args[0]){
                main::hlp($target, 'syntax: LIST(LS) CHANNELS(CHANS) | LIST(LS) NAMES <channel>');
             }
          }

@@ -21,10 +21,10 @@ sub new {
 
 sub on_privmsg {
    my ($self, $target, $msg, $ischan, $nick, undef, undef, undef) = @_;
-
+  
    # cmds
    if ($msg =~ /^((?:\[\s\]\s[^\[\]]+\s?)+)/) {
-      $target = $nick if ($ischan);
+      $target = $nick unless ($ischan);
 
       my (@x, $y);
 

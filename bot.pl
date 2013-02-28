@@ -528,6 +528,8 @@ sub loadmodules {
    my ($toload, $target) = @_;
 
    for (@$toload) {
+      $_ =~ y/A-Za-z0-9\-_//cd;
+
       printf("[%s] === Loading module [%s]\n", scalar localtime, $_);
 
       unless (exists $modules{$_}) {
@@ -539,16 +541,17 @@ sub loadmodules {
 
                unless ($@) {
                   $modules{$_} = $_->new(
-                     channels      => \%channels,
-                     myadmins      => \@myadmins,
-                     mychannels    => \%mychannels,
-                     myhelptext    => \$myhelptext,
-                     mynick        => \$mynick,
-                     myprofile     => \$myprofile,
-                     mytrigger     => \$mytrigger,
-                     public        => \$public,
-                     rawlog        => \$rawlog,
-                     silent        => \$silent,
+                     channels   => \%channels,
+                     logtodb    => \$logtodb,
+                     myadmins   => \@myadmins,
+                     mychannels => \%mychannels,
+                     myhelptext => \$myhelptext,
+                     mynick     => \$mynick,
+                     myprofile  => \$myprofile,
+                     mytrigger  => \$mytrigger,
+                     public     => \$public,
+                     rawlog     => \$rawlog,
+                     silent     => \$silent,
                   );
                }
                else {
@@ -650,9 +653,13 @@ sub unloadmodules {
    my ($tounload, $target) = @_;
 
    for (@$tounload) {
+      $_ =~ y/A-Za-z0-9\-_//cd;
+
       if (exists $modules{$_}) {
          printf("[%s] === Unloading module [%s]\n", scalar localtime, $_);
+
          $_->on_unload if ($_->can('on_unload'));
+
          $refresher->unload_module($RealBin . '/modules/' . $_ . '.pm');
          delete $modules{$_};
       }
@@ -668,7 +675,7 @@ sub quit {
    raw('QUIT :obai!');
 }
 
-#### main hooks
+### main hooks
 
 sub on_connected {
    printf("[%s] *** Connected to %s:%d [IPv6: %d, SSL: %d] as \"%s\"\n", scalar localtime, $server, $port, $ipv6, $ssl, $mynick);

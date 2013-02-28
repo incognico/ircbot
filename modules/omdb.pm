@@ -60,7 +60,7 @@ sub on_privmsg {
                      $$omdb{$_} = '?' if ($$omdb{$_} eq 'N/A');
                   }
 
-                  main::msg($target, '%s (%s) :: http://imdb.com/title/%s :: Plot: %s :: Genre: %s :: IMDB: %s/10 (%s) RT: %s%%, %s/10 (+%s/-%s) User: %s/5 (%s)', $$omdb{Title}, $$omdb{Year}, $$omdb{imdbID}, $$omdb{Plot}, $$omdb{Genre}, $$omdb{imdbRating}, $$omdb{imdbVotes}, $$omdb{tomatoMeter}, $$omdb{tomatoRating}, $$omdb{tomatoFresh}, $$omdb{tomatoRotten}, $$omdb{tomatoUserRating}, $$omdb{tomatoUserReviews});
+                  main::msg($target, '%s (%s) :: http://imdb.com/title/%s :: Plot: %s :: Genre: %s :: Runtime: %s :: IMDB: %s/10 (%s) RT: %s%%, %s/10 (+%s/-%s) User: %s/5 (%s)', $$omdb{Title}, $$omdb{Year}, $$omdb{imdbID}, $$omdb{Plot}, $$omdb{Genre}, $$omdb{Runtime}, $$omdb{imdbRating}, $$omdb{imdbVotes}, $$omdb{tomatoMeter}, $$omdb{tomatoRating}, $$omdb{tomatoFresh}, $$omdb{tomatoRotten}, $$omdb{tomatoUserRating}, $$omdb{tomatoUserReviews});
                }
                else {
                   main::msg($target, 'no match');
