@@ -8,8 +8,6 @@ use JSON;
 use LWP::UserAgent;
 use Number::Format ':subs';
 
-my $myprofile;
-
 ### functions
 
 sub duration {
@@ -28,8 +26,6 @@ sub duration {
 sub new {
    my ($package, %self) = @_;
    my $self = bless(\%self, $package);
-
-   $myprofile = $self->{myprofile};
 
    return $self;
 }
