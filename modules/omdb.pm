@@ -51,7 +51,7 @@ sub on_privmsg {
             my $response = $ua->get($url);
 
             if ($response->is_success) {
-               my $omdb = decode_json($response->decoded_content);
+               my $omdb = from_json($response->decoded_content);
 
                if ($$omdb{Response} eq 'True') {
                   $$omdb{Plot} = substr($$omdb{Plot}, 0, 148) . '...' if (length($$omdb{Plot}) > 150);
