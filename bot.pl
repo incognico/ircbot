@@ -4,7 +4,7 @@
 # 
 # Copyright 2012, Nico R. Wohlgemuth <nico@lifeisabug.com>
 
-our $version = '1.2.2';
+our $version = '1.3';
 
 use utf8;
 use strict;
@@ -251,8 +251,11 @@ while (my @raw = split(' ', <$socket>)) {
          # target, ischan, mode
       }
       when ('NICK') {
-         callhook('on_nick', (split('!', substr($raw[0], 1)))[0], substr($raw[2], 1));
-         # oldnick, newnick
+         my $who = substr($raw[0], 1);
+         my ($nick, $user, $host) = split(/[!@]/, $who);
+
+         callhook('on_nick', $nick, substr($raw[2], 1), $user, $host, $who);
+         # oldnick, newnick, user, host, who
       }
       when ('INVITE') {
          my $who = substr($raw[0], 1);
@@ -311,7 +314,7 @@ while (my @raw = split(' ', <$socket>)) {
    }
 
    push(@lastraw, "@raw");
-   shift(@lastraw) if ($#lastraw >= 3);
+   shift(@lastraw) if ($#lastraw >= 10);
 }
 
 callhook('on_ownquit');
@@ -853,7 +856,7 @@ sub on_privmsg {
       }
       elsif ($msg eq chr(1) . 'SOURCE' . chr(1)) {
          printf("[%s] *** CTCP SOURCE request by %s\n", scalar localtime, $nick);
-         ntc($nick, '%sSOURCE https://github.com/nwohlgem/ircbot%s', chr(1), chr(1));
+         ntc($nick, '%sSOURCE https://github.com/incognico/ircbot%s', chr(1), chr(1));
       }
    }
    elsif (substr($msg, 0, 1) eq $mytrigger) {
