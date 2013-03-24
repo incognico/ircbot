@@ -114,7 +114,7 @@ sub on_privmsg {
             LOL: { 
                for my $chans (keys(%{$mychannels->{$$myprofile}})) {
                   for (keys(%{$mychannels->{$$myprofile}{$chans}})) {
-                     if (lc($_) eq $args[0]) {
+                     if (lc($_) eq lc($args[0])) {
                         $online = $_;
                         last LOL;
                      }
