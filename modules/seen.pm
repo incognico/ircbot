@@ -36,19 +36,20 @@ sub new {
 ### hooks
 
 sub on_nick {
-   my ($self, $nick, $newnick, undef, undef, $who) = @_;
+   my ($self, $nick, $newnick, $user, $host, undef) = @_;
    
    my $lcnick = lc($nick);
    
    $people{$lcnick}{type}    = 'nick';
    $people{$lcnick}{ts}      = time;
    $people{$lcnick}{nick}    = $nick;
-   $people{$lcnick}{who}     = $who;
+   $people{$lcnick}{user}    = $user;
+   $people{$lcnick}{host}    = $host;
    $people{$lcnick}{newnick} = $newnick;
 }
 
 sub on_part {
-   my ($self, $chan, $nick, undef, undef, $who, $msg) = @_;
+   my ($self, $chan, $nick, $user, $host, undef, $msg) = @_;
    
    my $lcnick = lc($nick);
 
@@ -57,7 +58,8 @@ sub on_part {
    $people{$lcnick}{type}   = 'part';
    $people{$lcnick}{ts}     = time;
    $people{$lcnick}{nick}   = $nick;
-   $people{$lcnick}{who}    = $who;
+   $people{$lcnick}{user}   = $user;
+   $people{$lcnick}{host}   = $host;
    $people{$lcnick}{chan}   = $chan;
    $people{$lcnick}{reason} = $msg if ($msg);
 }
@@ -94,13 +96,13 @@ sub on_privmsg {
                my $lcnick = lc($args[0]);
                if ($people{$lcnick}) {
                   if ($people{$lcnick}{type} eq 'nick') {
-                     main::msg($target, '%s (%s) was last seen %s ago, changing nicks to %s', $people{$lcnick}{nick}, $people{$lcnick}{who}, duration(time - $people{$lcnick}{ts}), $people{$lcnick}{newnick});
+                     main::msg($target, '%s (%s@%s) was last seen %s ago, changing nicks to %s', $people{$lcnick}{nick}, $people{$lcnick}{user}, $people{$lcnick}{host}, duration(time - $people{$lcnick}{ts}), $people{$lcnick}{newnick});
                   }
                   elsif ($people{$lcnick}{type} eq 'part') {
-                      main::msg($target, '%s (%s) was last seen %s ago, parting %s', $people{$lcnick}{nick}, $people{$lcnick}{who}, duration(time - $people{$lcnick}{ts}), $people{$lcnick}{reason} ? "$people{$lcnick}{chan} with reason: $people{$lcnick}{reason}" : $people{$lcnick}{chan});
+                      main::msg($target, '%s (%s@%s) was last seen %s ago, parting %s', $people{$lcnick}{nick}, $people{$lcnick}{user}, $people{$lcnick}{host}, duration(time - $people{$lcnick}{ts}), $people{$lcnick}{reason} ? "$people{$lcnick}{chan} with reason: $people{$lcnick}{reason}" : $people{$lcnick}{chan});
                   }
                   elsif ($people{$lcnick}{type} eq 'quit') {
-                      main::msg($target, '%s (%s) was last seen %s ago, quitting with %s', $people{$lcnick}{nick}, $people{$lcnick}{who}, duration(time - $people{$lcnick}{ts}), $people{$lcnick}{reason} ? "reason: $people{$lcnick}{reason}" : 'no reason');
+                      main::msg($target, '%s (%s@%s) was last seen %s ago, quitting with %s', $people{$lcnick}{nick}, $people{$lcnick}{user}, $people{$lcnick}{host}, duration(time - $people{$lcnick}{ts}), $people{$lcnick}{reason} ? "reason: $people{$lcnick}{reason}" : 'no reason');
                   }
                }
                else {
@@ -116,7 +118,7 @@ sub on_privmsg {
 }
 
 sub on_quit {
-   my ($self, $nick, undef, undef, $who, $msg) = @_;
+   my ($self, $nick, $user, $host, undef, $msg) = @_;
 
    my $lcnick = lc($nick);
    
@@ -125,7 +127,8 @@ sub on_quit {
    $people{$lcnick}{type}   = 'quit';
    $people{$lcnick}{ts}     = time;
    $people{$lcnick}{nick}   = $nick;
-   $people{$lcnick}{who}    = $who;
+   $people{$lcnick}{user}   = $user;
+   $people{$lcnick}{host}   = $host;
    $people{$lcnick}{reason} = $msg if ($msg);
 }
 
