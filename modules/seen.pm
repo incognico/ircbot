@@ -4,11 +4,22 @@ use utf8;
 use strict;
 use warnings;
 
+# https://rt.cpan.org/Public/Bug/Display.html?id=54790
+#use YAML::Tiny qw(LoadFile DumpFile);
+use YAML qw(LoadFile DumpFile);
+
 my $mychannels;
 my $myprofile;
 my $mytrigger;
 
+my $cfg;
 my %people;
+
+### start config
+
+my $cfgname = "$ENV{HOME}/.bot/%s/%s.yml"; # package name, profile name
+
+### end config
 
 ### functions
 
@@ -22,6 +33,11 @@ sub duration {
             ($gmt[0] ? ($gmt[5] || $gmt[7] || $gmt[2] || $gmt[1] ? ', ' : '').$gmt[0].' second'.($gmt[0] > 1 ? 's' : '') : '');
 }
 
+sub loadcfg {
+   printf("[%s] === modules::%s: Loading config: %s\n", scalar localtime, __PACKAGE__, $cfg);
+   %people = LoadFile($cfg);
+}
+
 sub new {
    my ($package, %self) = @_;
    my $self = bless(\%self, $package);
@@ -30,7 +46,16 @@ sub new {
    $myprofile  = $self->{myprofile};
    $mytrigger  = $self->{mytrigger};
 
+   $cfg = sprintf($cfgname, __PACKAGE__, $$myprofile);
+
+   loadcfg() if (-e $cfg);
+
    return $self;
+}
+
+sub savecfg {
+   printf("[%s] === modules::%s: Saving config: %s\n", scalar localtime, __PACKAGE__, $cfg);
+   DumpFile($cfg, %people);
 }
 
 ### hooks
@@ -48,6 +73,10 @@ sub on_nick {
    $people{$lcnick}{newnick} = $newnick;
 }
 
+sub on_ownquit {
+   savecfg();
+}
+
 sub on_part {
    my ($self, $chan, $nick, $user, $host, undef, $msg) = @_;
    
@@ -62,6 +91,10 @@ sub on_part {
    $people{$lcnick}{host}   = $host;
    $people{$lcnick}{chan}   = $chan;
    $people{$lcnick}{reason} = $msg if ($msg);
+}
+
+sub on_ping {
+   savecfg();
 }
 
 sub on_privmsg {
@@ -130,6 +163,10 @@ sub on_quit {
    $people{$lcnick}{user}   = $user;
    $people{$lcnick}{host}   = $host;
    $people{$lcnick}{reason} = $msg if ($msg);
+}
+
+sub on_unload {
+   savecfg();
 }
 
 1;

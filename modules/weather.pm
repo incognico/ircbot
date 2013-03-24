@@ -65,6 +65,11 @@ my $cfgname = "$ENV{HOME}/.bot/%s/%s.yml"; # package name, profile name
 
 ### functions
 
+sub loadcfg {
+   printf("[%s] === modules::%s: Loading config: %s\n", scalar localtime, __PACKAGE__, $cfg);
+   %userlocations = LoadFile($cfg);
+}
+
 sub new {
    my ($package, %self) = @_;
    my $self = bless(\%self, $package);
@@ -77,11 +82,6 @@ sub new {
    loadcfg() if (-e $cfg);
 
    return $self;
-}
-
-sub loadcfg {
-   printf("[%s] === modules::%s: Loading config: %s\n", scalar localtime, __PACKAGE__, $cfg);
-   %userlocations = LoadFile($cfg);
 }
 
 sub savecfg {
@@ -109,7 +109,8 @@ sub on_privmsg {
       my @args = split(' ', $msg);
       my $cmd = uc(substr(shift(@args), 1));
 
-      $target = $nick unless ($ischan);
+      #$target = $nick unless ($ischan);
+      return unless ($ischan);
 
       # cmds 
       if ($cmd eq 'WEATHER' || $cmd eq 'W') {
@@ -160,6 +161,8 @@ sub on_privmsg {
          my $winddir   = $fc->[0]->{winddirection}->{name};
          my $fog       = $fc->[0]->{fog}{percent};
 
+         #use Data::Dumper;
+         #main::msg($target, Dumper($fc));
          main::msg($target, "%s :: %.1f°C / %.1f°F :: %s :: Hum: %u%% :: Wind: %s (%u m/s) from %s :: Fog: %u%%", $loc, $celcius, $farenheit, $symbols{$symbol}, $humidity, $winddesc[$beaufort], $windspeed, $winddir, $fog);
       }
    }
