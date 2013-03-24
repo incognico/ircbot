@@ -60,6 +60,12 @@ sub savecfg {
 
 ### hooks
 
+sub on_join {
+   my ($self, undef, $nick, undef, undef, undef) = @_;
+
+   delete $people{lc($nick)};
+}
+
 sub on_nick {
    my ($self, $nick, $newnick, $user, $host, undef) = @_;
    
@@ -71,6 +77,8 @@ sub on_nick {
    $people{$lcnick}{user}    = $user;
    $people{$lcnick}{host}    = $host;
    $people{$lcnick}{newnick} = $newnick;
+
+   delete $people{lc($newnick)};
 }
 
 sub on_ownquit {
