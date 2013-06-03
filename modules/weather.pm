@@ -149,7 +149,14 @@ sub on_privmsg {
 
          printf("[%s] === modules::%s: Weather [%s] on %s by %s\n", scalar localtime, __PACKAGE__, $loc, $target, $nick);
 
-         my $fcloc = Weather::YR::Locationforecast->new(latitude => $lat, longitude => $lon);
+         my $fcloc;
+         eval { $fcloc = Weather::YR::Locationforecast->new(latitude => $lat, longitude => $lon) };
+
+         unless ($fcloc) {
+            main::msg($target, 'error fetching weather data, try again later');
+            return;
+         }
+
          my $fc    = $fcloc->forecast;
             
          my $celcius   = $fc->[0]->{temperature}->{value};
@@ -161,8 +168,6 @@ sub on_privmsg {
          my $winddir   = $fc->[0]->{winddirection}->{name};
          my $fog       = $fc->[0]->{fog}{percent};
 
-         #use Data::Dumper;
-         #main::msg($target, Dumper($fc));
          main::msg($target, "%s :: %.1f°C / %.1f°F :: %s :: Hum: %u%% :: Wind: %s (%u m/s) from %s :: Fog: %u%%", $loc, $celcius, $farenheit, $symbols{$symbol}, $humidity, $winddesc[$beaufort], $windspeed, $winddir, $fog);
       }
    }
