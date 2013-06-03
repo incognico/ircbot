@@ -1,4 +1,4 @@
-# sqlite3 network.db "create table seen(type text, ts integer, lcnick text, nick text, user text, host text, chan text, kicker text, reason text, newnick text);"
+# sqlite3 profile.db "create table seen(type text, ts integer, lcnick text primary key, nick text, user text, host text, chan text, kicker text, reason text, newnick text);"
 
 package seen;
 
@@ -50,7 +50,11 @@ sub new {
 
 sub sqlite_connect {
    unless ($dbh = DBI->connect("DBI:SQLite:dbname=$db", '', '', { AutoCommit => 1, RaiseError => 1 })) {
+      printf("[%s] !!! modules::%s: %s\n", scalar localtime, __PACKAGE__, $DBI::errstr);
       return 1;
+   }
+   else {
+      return 0;
    }
 }
 
