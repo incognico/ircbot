@@ -49,7 +49,7 @@ sub new {
 }
 
 sub sqlite_connect {
-   unless ($dbh = DBI->connect("DBI:SQLite:dbname=$db", '', '', { AutoCommit => 1, RaiseError => 1 })) {
+   unless ($dbh = DBI->connect("DBI:SQLite:dbname=$db", '', '', { AutoCommit => 1 })) {
       printf("[%s] !!! modules::%s: %s\n", scalar localtime, __PACKAGE__, $DBI::errstr);
       return 1;
    }
