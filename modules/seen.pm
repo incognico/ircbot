@@ -144,7 +144,7 @@ sub on_privmsg {
                       main::msg($target, '%s was last seen %s ago, being kicked from %s by %s with reason %s', $$guy{nick}, duration(time - $$guy{ts}), $$guy{chan}, $$guy{kicker}, $$guy{reason});
                   }
                   elsif ($$guy{type} eq 'part') {
-                      main::msg($target, '%s (%s@%s) was last seen %s ago, parting %s with reason: %s', $$guy{nick}, $$guy{user}, $$guy{host}, duration(time - $$guy{ts}), $$guy{reason});
+                      main::msg($target, '%s (%s@%s) was last seen %s ago, parting %s with reason: %s', $$guy{nick}, $$guy{user}, $$guy{host}, duration(time - $$guy{ts}), $$guy{chan}, $$guy{reason});
                   }
                   elsif ($$guy{type} eq 'quit') {
                       main::msg($target, '%s (%s@%s) was last seen %s ago, quitting with reason: %s', $$guy{nick}, $$guy{user}, $$guy{host}, duration(time - $$guy{ts}), $$guy{reason});
