@@ -76,6 +76,8 @@ sub on_join {
 
 sub on_kick {
    my ($self, $chan, $nick, $kicker, $msg) = @_;
+   
+   removelcnick($nick);
 
    $dbh->do('INSERT INTO seen (type,ts,lcnick,nick,chan,kicker,reason) VALUES (?,?,?,?,?,?,?)', undef, ('kick', time, lc($nick), $nick, $chan, $kicker, $msg ? $msg : 'n/a'));
 }
@@ -94,6 +96,8 @@ sub on_ownquit {
 
 sub on_part {
    my ($self, $chan, $nick, $user, $host, undef, $msg) = @_;
+   
+   removelcnick($nick);
 
    $dbh->do('INSERT INTO seen (type,ts,lcnick,nick,user,host,chan,reason) VALUES (?,?,?,?,?,?,?,?)', undef, ('part', time, lc($nick), $nick, $user, $host, $chan, $msg ? $msg : 'n/a'));
 }
@@ -157,6 +161,8 @@ sub on_privmsg {
 
 sub on_quit {
    my ($self, $nick, $user, $host, undef, $msg) = @_;
+
+   removelcnick($nick);
 
    $dbh->do('INSERT INTO seen (type,ts,lcnick,nick,user,host,reason) VALUES (?,?,?,?,?,?,?)', undef, ('quit', time, lc($nick), $nick, $user, $host, $msg ? $msg : 'n/a'));
 }
