@@ -1,4 +1,4 @@
-# sqlite3 profile.db "create table seen(type text, ts integer, lcnick text primary key, nick text, user text, host text, chan text, kicker text, reason text, newnick text);"
+# sqlite3 myprofile.db "create table seen(type text, ts integer, lcnick text primary key, nick text, user text, host text, chan text, kicker text, reason text, newnick text);"
 
 package seen;
 
@@ -48,6 +48,10 @@ sub new {
    return $self;
 }
 
+sub removelcnick {
+   $dbh->do('DELETE FROM seen WHERE lcnick = ?', undef, lc($_[0]));
+}
+
 sub sqlite_connect {
    unless ($dbh = DBI->connect("DBI:SQLite:dbname=$db", '', '', { AutoCommit => 1 })) {
       printf("[%s] !!! modules::%s: %s\n", scalar localtime, __PACKAGE__, $DBI::errstr);
@@ -67,7 +71,7 @@ sub sqlite_disconnect {
 sub on_join {
    my ($self, undef, $nick, undef, undef, undef) = @_;
 
-   $dbh->do('DELETE FROM seen WHERE lcnick = ?', undef, lc($nick));
+   removelcnick($nick);
 }
 
 sub on_kick {
@@ -79,9 +83,9 @@ sub on_kick {
 sub on_nick {
    my ($self, $nick, $newnick, $user, $host, undef) = @_;
 
-   $dbh->do('INSERT INTO seen (type,ts,lcnick,nick,user,host,newnick) VALUES (?,?,?,?,?,?,?)', undef, ('nick', time, lc($nick), $nick, $user, $host, $newnick));
+   removelcnick($newnick);
 
-   $dbh->do('DELETE FROM seen WHERE lcnick = ?', undef, lc($newnick));
+   $dbh->do('INSERT INTO seen (type,ts,lcnick,nick,user,host,newnick) VALUES (?,?,?,?,?,?,?)', undef, ('nick', time, lc($nick), $nick, $user, $host, $newnick));
 }
 
 sub on_ownquit {
@@ -123,9 +127,7 @@ sub on_privmsg {
                main::msg($target, '%s is online right now', $online);
             }
             else {
-               my $lcnick = lc($args[0]);
-
-               my $guy = $dbh->selectrow_hashref('SELECT * FROM seen WHERE lcnick = ?', undef, $lcnick);
+               my $guy = $dbh->selectrow_hashref('SELECT * FROM seen WHERE lcnick = ?', undef, lc($args[0]));
 
                unless ($guy) {
                   main::msg($target, 'I have not seen %s yet', $args[0]);
@@ -162,9 +164,7 @@ sub on_quit {
 sub on_synced {
    my ($self, $chan) = @_;
 
-   for (keys(%{$mychannels->{$$myprofile}{$chan}})) {
-      $dbh->do('DELETE FROM seen WHERE lcnick = ?', undef, lc($_));
-   }
+   removelcnick($_) for (keys(%{$mychannels->{$$myprofile}{$chan}}));
 }
 
 sub on_unload {
