@@ -246,6 +246,28 @@ sub on_privmsg {
             main::hlp($target, 'syntax: LIST(LS) CHANNELS(CHANS) | LIST(LS) NAMES <channel>');
          }
       }
+      elsif ($cmd eq 'USERINFO' || $cmd eq 'UI') {
+         if ($args[0]) {
+            my $count = 0;
+            my $userchans;
+
+            for my $chans (keys(%{$mychannels->{$$myprofile}})) {
+               for (keys(%{$mychannels->{$$myprofile}{$chans}})) {
+                  if (lc($_) eq lc($args[0])) {
+                     $userchans .= $chans . ', ';
+                     $count++;
+                  }
+               }
+            }
+
+            if ($count > 0) {
+               main::msg($target, '%s is in %d common channel(s): %s', $args[0], $count, substr($userchans, 0, -2));
+            }
+            else {
+               main::msg($target, 'no result');
+            }
+         }
+      }
       elsif ($cmd eq 'MSG') {
          if ($args[1]) {
             main::msg($args[0], join(' ', @args[1..$#args]));
