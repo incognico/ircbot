@@ -85,6 +85,7 @@ sub on_kick {
 sub on_nick {
    my ($self, $nick, $newnick, $user, $host, undef) = @_;
 
+   removelcnick($nick);
    removelcnick($newnick);
 
    $dbh->do('INSERT INTO seen (type,ts,lcnick,nick,user,host,newnick) VALUES (?,?,?,?,?,?,?)', undef, ('nick', time, lc($nick), $nick, $user, $host, $newnick));
