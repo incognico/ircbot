@@ -129,7 +129,8 @@ sub on_privmsg {
          }
          else {
             my $geo   = Geo::Coder::Google->new(apiver => 3, language => 'en');
-            my $input = $geo->geocode(location => "@args");
+
+            my $input = eval { $geo->geocode(location => "@args") };
 
             unless ($input) {
                main::msg($target, 'no match');
