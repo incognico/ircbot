@@ -9,8 +9,8 @@ use DBI;
 ### start config
 
 my @cankill   = qw(nico!nico@korea-dpr.org);
-my $deerchan  = '#idletalk';
-my $deeritor  = '<temporarily unavailable>';
+my $deerchan  = '#deer';
+my $deeritor  = 'http://example.com/deeritor';
 my $maxsearch = 20;
 
 my %sql = (
@@ -165,7 +165,7 @@ sub on_privmsg {
    my $cmd  = uc(shift(@args));
 
    if ($cmd eq 'DEER') {
-      my ($ret, $creator, $irccode, $deer, $special) = fetchdeer($args[0] ? $args[0] : 'random');
+      my ($ret, $creator, $irccode, $deer, $special) = fetchdeer($args[0] ? "@args" : 'random');
 
       if ($ret == 1) {
          main::msg($target, 'deer: database error');
