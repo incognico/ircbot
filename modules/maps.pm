@@ -34,7 +34,9 @@ sub on_privmsg {
       if ($cmd eq 'MAPS') {
          if ($args[0]) {
             my $geo = Geo::Coder::Google->new(apiver => 3);
-            my $loc = $geo->geocode(location => "@args");
+
+            my $loc;
+            eval { $loc = $geo->geocode(location => "@args") };
 
             if ($loc) {
                printf("[%s] === modules::%s: Maps [%s] on %s by %s\n", scalar localtime, __PACKAGE__, $loc->{formatted_address}, $target, $nick);
