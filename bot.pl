@@ -1,10 +1,10 @@
 #!/usr/bin/env perl
 
 # ./bot.pl -p <profile name>
-# 
+#
 # Copyright 2012, Nico R. Wohlgemuth <nico@lifeisabug.com>
 
-our $version = '1.4';
+our $version = '1.5';
 
 use utf8;
 use strict;
@@ -59,7 +59,6 @@ my %profiles = (
       authservackwho    => 'NickServ!service@example.net',
       authservackstring => 'Password accepted - you are now recognized.',
       nick              => 'IamAbot',
-      pass              => 'secret',
       umode             => '+gp',
       public            => 0,
    },
@@ -73,7 +72,7 @@ my %profiles = (
       helptext          => '',
       silent            => 1,
       admins            => [qw(the!yiff@admin.only)],
-      adminpass         => 'specialsecret',
+      adminpass         => 'othersecret',
       modules           => [qw(basecmds yiff)],
    },
 );
@@ -106,14 +105,14 @@ my $mydefumode  = $profiles{$myprofile}{umode}       || 0;
 my $ipv6        = $profiles{$myprofile}{ipv6}        || 0;
 my $ssl         = $profiles{$myprofile}{ssl}         || 0;
 my $auth        = $profiles{$myprofile}{auth}        || 0;
-my @mychantypes = defined @{$profiles{$myprofile}{chantypes}} ? @{$profiles{$myprofile}{chantypes}} : qw(# &);
+my @mychantypes = defined $profiles{$myprofile}{chantypes} ? @{$profiles{$myprofile}{chantypes}} : qw(# &);
 
 $myaddr4      = $profiles{$myprofile}{addr4}        if (defined $profiles{$myprofile}{addr4});
 $myaddr6      = $profiles{$myprofile}{addr6}        if (defined $profiles{$myprofile}{addr6});
-@myadmins     = @{$profiles{$myprofile}{admins}}    if (defined @{$profiles{$myprofile}{admins}});
+@myadmins     = @{$profiles{$myprofile}{admins}}    if (defined $profiles{$myprofile}{admins});
 $myadminpass  = $profiles{$myprofile}{adminpass}    if (defined $profiles{$myprofile}{adminpass});
 $myhelptext   = $profiles{$myprofile}{helptext}     if (defined $profiles{$myprofile}{helptext});
-@mymodules    = @{$profiles{$myprofile}{modules}}   if (defined @{$profiles{$myprofile}{modules}});
+@mymodules    = @{$profiles{$myprofile}{modules}}   if (defined $profiles{$myprofile}{modules});
 $mytrigger    = $profiles{$myprofile}{trigger}      if (defined $profiles{$myprofile}{trigger});
 $public       = $profiles{$myprofile}{public}       if (defined $profiles{$myprofile}{public});
 $rawlog       = $profiles{$myprofile}{rawlog}       if (defined $profiles{$myprofile}{rawlog});
@@ -137,7 +136,6 @@ if ($ipv6) {
 
    if ($ssl) {
       use IO::Socket::SSL 'inet6';
-
    }
    else {
       use IO::Socket::INET6;
@@ -215,7 +213,7 @@ while (my @raw = split(' ', <$socket>)) {
          my ($target, $msg, $ischan) = ($raw[2], substr(join(' ', @raw[3..$#raw]), 1), ischan(substr($raw[2], 0, 1)));
          my $who = substr($raw[0], 1);
          my ($nick, $user, $host) = split(/[!@]/, $who);
-         
+ 
          if ($raw[1] eq 'PRIVMSG') {
             callhook('on_privmsg', $ischan ? lc($target) : $target, $msg, $ischan, $nick, $user, $host, $who);
          }
@@ -985,7 +983,7 @@ sub on_privmsg {
                if ($args[1]) {
                   if ($cargs[1] eq 'ALL') {
                      my $count = scalar keys(%{$rejoinchannels{$myprofile}});
-                     
+
                      delete $rejoinchannels{$myprofile};
 
                      msg($target, '%u channels removed', $count);
