@@ -8,9 +8,9 @@ use warnings;
 #use YAML::Tiny qw(LoadFile DumpFile);
 use YAML qw(LoadFile DumpFile);
 
+use DateTime::TimeZone;
 use Geo::Coder::Google;
 use Weather::YR;
-use Weather::YR::Locationforecast;
 
 my $myprofile;
 my $mytrigger;
@@ -18,28 +18,6 @@ my $mytrigger;
 my $cfg;
 my $changed;
 my %userlocations;
-
-my %symbols = (
-   SUN                 => 'Sunny',
-   LIGHTCLOUD          => 'Light clouds',
-   PARTLYCLOUD         => 'Partly cloudy',
-   CLOUD               => 'Cloudy',
-   LIGHTRAINSUN        => 'Light rain, sunny',
-   LIGHTRAINTHUNDERSUN => 'Light rain, thunder, sunny',
-   SLEETSUN            => 'Sleet, sunny',
-   SNOWSUN             => 'Snow, sunny',
-   LIGHTRAIN           => 'Light rain',
-   RAIN                => 'Rain',
-   RAINTHUNDER         => 'Rain, thunder',
-   SLEET               => 'Sleet',
-   SNOW                => 'Snow',
-   SNOWTHUNDER         => 'Snow, thunder',
-   FOG                 => 'Foggy',
-   SLEETSUNTHUNDER     => 'Sleet, sunny, thunder',
-   SNOWSUNTHUNDER      => 'Snow, sunny, thunder',
-   LIGHTRAINTHUNDER    => 'Light rain, thunder',
-   SLEETTHUNDER        => 'Sleet, thunder'
-);
 
 my @winddesc = (
    'Calm',
@@ -123,14 +101,15 @@ sub on_privmsg {
                $lon = $userlocations{$nick}{lon};
             }
             else {
-               main::msg($target, q{last location for %s is unknown, please specify one and I'll remember it.}, $nick);
+               main::msg($target, q{last location for %s is unknown, please specify one (%sw <location>) and I'll remember it.}, $nick, $$mytrigger);
                return;
             }
          }
          else {
-            my $geo   = Geo::Coder::Google->new(apiver => 3, language => 'en');
+            my $geo = Geo::Coder::Google->new(apiver => 3, language => 'en');
 
-            my $input = eval { $geo->geocode(location => "@args") };
+            my $input;
+            eval { $input = $geo->geocode(location => "@args") };
 
             unless ($input) {
                main::msg($target, 'no match');
@@ -151,25 +130,26 @@ sub on_privmsg {
          printf("[%s] === modules::%s: Weather [%s] on %s by %s\n", scalar localtime, __PACKAGE__, $loc, $target, $nick);
 
          my $fcloc;
-         eval { $fcloc = Weather::YR::Locationforecast->new(latitude => $lat, longitude => $lon) };
+         eval { $fcloc = Weather::YR->new(lat => $lat, lon => $lon, tz => DateTime::TimeZone->new(name => 'Europe/Berlin'), lang => 'en'); };
 
          unless ($fcloc) {
             main::msg($target, 'error fetching weather data, try again later');
             return;
          }
 
-         my $fc    = $fcloc->forecast;
+         my $fc = $fcloc->location_forecast->now;
             
-         my $celcius   = $fc->[0]->{temperature}->{value};
-         my $farenheit = $celcius * (9/5) + 32;
-         my $symbol    = $fc->[1]->{name};
-         my $humidity  = $fc->[0]->{humidity}{value};
-         my $beaufort  = $fc->[0]->{windspeed}{beaufort};
-         my $windspeed = $fc->[0]->{windspeed}{mps};
-         my $winddir   = $fc->[0]->{winddirection}->{name};
-         my $fog       = $fc->[0]->{fog}{percent};
+         my $celsius    = $fc->temperature->celsius;
+         my $fahrenheit = $fc->temperature->fahrenheit;
+         my $symbol     = $fc->precipitation->symbol->text;
+         my $precip     = $fc->precipitation->symbol->number;
+         my $humidity   = $fc->humidity->percent;
+         my $cloudiness = $fc->cloudiness->percent;
+         my $beaufort   = $fc->wind_speed->beaufort;
+         my $winddir    = $fc->wind_direction->name;
+         my $fog        = $fc->fog->percent;
 
-         main::msg($target, "%s :: %.1f°C / %.1f°F :: %s :: Hum: %u%% :: Wind: %s (%u m/s) from %s :: Fog: %u%%", $loc, $celcius, $farenheit, $symbols{$symbol}, $humidity, $winddesc[$beaufort], $windspeed, $winddir, $fog);
+         main::msg($target, "%s :: %.1f°C / %.1f°F :: %s :: Pop: %u%% :: Cld: %u%% :: Hum: %u%% :: Fog: %u%% :: Wnd: %s from %s", $loc, $celsius, $fahrenheit, $symbol, $precip, $cloudiness, $humidity, $fog, $winddesc[$beaufort], $winddir);
       }
    }
 }
