@@ -2,9 +2,9 @@
 
 # ./bot.pl -p <profile name>
 #
-# Copyright 2012, Nico R. Wohlgemuth <nico@lifeisabug.com>
+# Copyright 2012-2015, Nico R. Wohlgemuth <nico@lifeisabug.com>
 
-our $version = '1.5';
+our $version = '1.6';
 
 use utf8;
 use strict;
@@ -105,6 +105,7 @@ my $mydefumode  = $profiles{$myprofile}{umode}       || 0;
 my $ipv6        = $profiles{$myprofile}{ipv6}        || 0;
 my $ssl         = $profiles{$myprofile}{ssl}         || 0;
 my $auth        = $profiles{$myprofile}{auth}        || 0;
+my $loc         = $profiles{$myprofile}{loc}         || 0;
 my @mychantypes = defined $profiles{$myprofile}{chantypes} ? @{$profiles{$myprofile}{chantypes}} : qw(# &);
 
 $myaddr4      = $profiles{$myprofile}{addr4}        if (defined $profiles{$myprofile}{addr4});
@@ -186,6 +187,7 @@ my $socket = ($ssl ? 'IO::Socket::SSL' : ($ipv6 ? 'IO::Socket::INET6' : 'IO::Soc
    PeerPort  => $port,
 ) or croak $!;
 
+raw('PASS %s:%s', $mynick, $mypass) if ($loc);
 raw('NICK %s', $mynick);
 raw('USER %s 8 * :%s', $myuser, $myuserinfo);
 
@@ -213,7 +215,7 @@ while (my @raw = split(' ', <$socket>)) {
          my ($target, $msg, $ischan) = ($raw[2], substr(join(' ', @raw[3..$#raw]), 1), ischan(substr($raw[2], 0, 1)));
          my $who = substr($raw[0], 1);
          my ($nick, $user, $host) = split(/[!@]/, $who);
- 
+
          if ($raw[1] eq 'PRIVMSG') {
             callhook('on_privmsg', $ischan ? lc($target) : $target, $msg, $ischan, $nick, $user, $host, $who);
          }
@@ -303,6 +305,10 @@ while (my @raw = split(' ', <$socket>)) {
       when ([qw(432 433 434)]) {
          callhook('on_nickinuse');
       }
+      when ([qw(473 474 475)]) {
+         callhook('on_keyedbanned', $raw[3]);
+         # chan
+      }
       when ('005') {
          callhook('on_isupport', join(' ', @raw[2..$#raw]));
          # isupport
@@ -377,30 +383,31 @@ sub callhook {
    my ($sub, @args) = @_;
 
    my %subs = (
-      on_autojoin  => \&on_autojoin,
-      on_connected => \&on_connected,
-      on_invite    => \&on_invite,
-      on_isupport  => \&on_isupport,
-      on_join      => \&on_join,
-      on_kick      => \&on_kick,
-      on_knock     => \&on_knock,
-      on_mode      => \&on_mode,
-      on_names     => \&on_names,
-      on_nick      => \&on_nick,
-      on_nickinuse => \&on_nickinuse,
-      on_notice    => \&on_notice,
-      on_ownjoin   => \&on_ownjoin,
-      on_ownkick   => \&on_ownkick,
-      on_ownpart   => \&on_ownpart,
-      on_ownquit   => \&on_ownquit,
-      on_part      => \&on_part,
-      on_ping      => \&on_ping,
-      on_privmsg   => \&on_privmsg,
-      on_quit      => \&on_quit,
-      on_synced    => \&on_synced,
-      on_umodeg    => \&on_umodeg,
-      on_unavail   => \&on_unavail,
-      on_userhost  => \&on_userhost,
+      on_autojoin    => \&on_autojoin,
+      on_connected   => \&on_connected,
+      on_invite      => \&on_invite,
+      on_isupport    => \&on_isupport,
+      on_join        => \&on_join,
+      on_keyedbanned => \&on_keyedbanned,
+      on_kick        => \&on_kick,
+      on_knock       => \&on_knock,
+      on_mode        => \&on_mode,
+      on_names       => \&on_names,
+      on_nick        => \&on_nick,
+      on_nickinuse   => \&on_nickinuse,
+      on_notice      => \&on_notice,
+      on_ownjoin     => \&on_ownjoin,
+      on_ownkick     => \&on_ownkick,
+      on_ownpart     => \&on_ownpart,
+      on_ownquit     => \&on_ownquit,
+      on_part        => \&on_part,
+      on_ping        => \&on_ping,
+      on_privmsg     => \&on_privmsg,
+      on_quit        => \&on_quit,
+      on_synced      => \&on_synced,
+      on_umodeg      => \&on_umodeg,
+      on_unavail     => \&on_unavail,
+      on_userhost    => \&on_userhost,
    );
 
    if (exists $subs{$sub}) {

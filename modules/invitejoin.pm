@@ -26,7 +26,7 @@ my %recentkickchannels;
 ### start config
 
 my $cfgname  = "$ENV{HOME}/.bot/%s/%s.yml"; # package name, profile name
-my $minusers = 8;
+my $minusers = 12;
 
 ### end config
 
@@ -165,6 +165,13 @@ sub on_invite {
    }
 }
 
+sub on_keyedbanned {
+   my ($self, $chan) = @_;
+
+   printf("[%s] === modules::%s: Banned/keyed, removing channel [%s]\n", scalar localtime, __PACKAGE__, $chan);
+   on_ownpart($self, $chan);
+}
+
 sub on_ownkick {
    my ($self, $chan, $nick) = @_;
 
@@ -195,9 +202,9 @@ sub on_ping {
       $count = 0;
       delete $recentkickchannels{$$myprofile};
 
-      for (keys(%{$invitechannels{joinlist}{$$myprofile}})) {
-         checksize($_);
-      }
+      #for (keys(%{$invitechannels{joinlist}{$$myprofile}})) {
+      #   checksize($_);
+      #}
    }
    else {
       $count++;
