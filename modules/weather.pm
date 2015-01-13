@@ -4,13 +4,12 @@ use utf8;
 use strict;
 use warnings;
 
-# https://rt.cpan.org/Public/Bug/Display.html?id=54790
-#use YAML::Tiny qw(LoadFile DumpFile);
-use YAML qw(LoadFile DumpFile);
-
 use DateTime::TimeZone;
 use Geo::Coder::Google;
+use JSON 'decode_json';
+use LWP::Simple;
 use Weather::YR;
+use YAML::Tiny qw(LoadFile DumpFile);
 
 my $myprofile;
 my $mytrigger;
@@ -38,6 +37,7 @@ my @winddesc = (
 ### start config
 
 my $cfgname = "$ENV{HOME}/.bot/%s/%s.yml"; # package name, profile name
+my $elevurl = 'https://maps.googleapis.com/maps/api/elevation/json?locations=';
 
 ### end config
 
@@ -93,12 +93,14 @@ sub on_privmsg {
       # cmds 
       if ($cmd eq 'WEATHER' || $cmd eq 'W') {
          my ($loc, $lat, $lon);
+         my $alt = 0;
 
          unless ($args[0]) {
             if (exists $userlocations{$nick}) {
                $loc = $userlocations{$nick}{loc};
                $lat = $userlocations{$nick}{lat};
                $lon = $userlocations{$nick}{lon};
+               $alt = $userlocations{$nick}{alt};
             }
             else {
                main::msg($target, q{last location for %s is unknown, please specify one (%sw <location>) and I'll remember it.}, $nick, $$mytrigger);
@@ -119,10 +121,22 @@ sub on_privmsg {
             $loc = $input->{formatted_address};
             $lat = $input->{geometry}{location}{lat};
             $lon = $input->{geometry}{location}{lng};
+
+            my $json = get($elevurl . $lat . ',' . $lon);
+
+            if ($json) {
+               my $elevdata;
+               eval { $elevdata = decode_json($json) };
+
+               if ($elevdata->{status} eq 'OK') {
+                  $alt = $elevdata->{results}->[0]->{elevation};
+               }
+            }
          
             $userlocations{$nick}{loc} = $loc;
             $userlocations{$nick}{lat} = $lat;
             $userlocations{$nick}{lon} = $lon;
+            $userlocations{$nick}{alt} = $alt;
 
             $changed = 1;
          }
@@ -130,7 +144,7 @@ sub on_privmsg {
          printf("[%s] === modules::%s: Weather [%s] on %s by %s\n", scalar localtime, __PACKAGE__, $loc, $target, $nick);
 
          my $fcloc;
-         eval { $fcloc = Weather::YR->new(lat => $lat, lon => $lon, tz => DateTime::TimeZone->new(name => 'Europe/Berlin'), lang => 'en'); };
+         eval { $fcloc = Weather::YR->new(lat => $lat, lon => $lon, msl => int($alt), tz => DateTime::TimeZone->new(name => 'Europe/Berlin'), lang => 'en'); };
 
          unless ($fcloc) {
             main::msg($target, 'error fetching weather data, try again later');
@@ -139,17 +153,16 @@ sub on_privmsg {
 
          my $fc = $fcloc->location_forecast->now;
             
-         my $celsius    = $fc->temperature->celsius;
-         my $fahrenheit = $fc->temperature->fahrenheit;
-         my $symbol     = $fc->precipitation->symbol->text;
-         my $precip     = $fc->precipitation->symbol->number;
-         my $humidity   = $fc->humidity->percent;
-         my $cloudiness = $fc->cloudiness->percent;
          my $beaufort   = $fc->wind_speed->beaufort;
-         my $winddir    = $fc->wind_direction->name;
+         my $celsius    = $fc->temperature->celsius;
+         my $cloudiness = $fc->cloudiness->percent;
+         my $fahrenheit = $fc->temperature->fahrenheit;
          my $fog        = $fc->fog->percent;
+         my $humidity   = $fc->humidity->percent;
+         my $symbol     = $fc->precipitation->symbol->text ? $fc->precipitation->symbol->text : '?';
+         my $winddir    = $fc->wind_direction->name;
 
-         main::msg($target, "%s :: %.1f°C / %.1f°F :: %s :: Pop: %u%% :: Cld: %u%% :: Hum: %u%% :: Fog: %u%% :: Wnd: %s from %s", $loc, $celsius, $fahrenheit, $symbol, $precip, $cloudiness, $humidity, $fog, $winddesc[$beaufort], $winddir);
+         main::msg($target, "%s (%dm/%dft) :: %.1f°C / %.1f°F :: %s :: Cld: %d%% :: Hum: %d%% :: Fog: %d%% :: Wnd: %s from %s", $loc, int($alt), int($alt * 3.2808), $celsius, $fahrenheit, $symbol, $cloudiness, $humidity, $fog, $winddesc[$beaufort], $winddir);
       }
    }
 }
