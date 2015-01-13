@@ -4,9 +4,7 @@ use utf8;
 use strict;
 use warnings;
 
-# https://rt.cpan.org/Public/Bug/Display.html?id=54790
-#use YAML::Tiny qw(LoadFile DumpFile);
-use YAML qw(LoadFile DumpFile);
+use YAML::Tiny qw(LoadFile DumpFile);
 
 my $channels;
 my $mychannels;
