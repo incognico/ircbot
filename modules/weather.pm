@@ -144,7 +144,7 @@ sub on_privmsg {
          printf("[%s] === modules::%s: Weather [%s] on %s by %s\n", scalar localtime, __PACKAGE__, $loc, $target, $nick);
 
          my $fcloc;
-         eval { $fcloc = Weather::YR->new(lat => $lat, lon => $lon, msl => int($alt), tz => DateTime::TimeZone->new(name => 'Europe/Berlin'), lang => 'en'); };
+         eval { $fcloc = Weather::YR->new(lat => $lat, lon => $lon, msl => int($alt), tz => DateTime::TimeZone->new(name => 'Europe/Oslo'), lang => 'en') };
 
          unless ($fcloc) {
             main::msg($target, 'error fetching weather data, try again later');
@@ -159,10 +159,10 @@ sub on_privmsg {
          my $fahrenheit = $fc->temperature->fahrenheit;
          my $fog        = $fc->fog->percent;
          my $humidity   = $fc->humidity->percent;
-         my $symbol     = $fc->precipitation->symbol->text ? $fc->precipitation->symbol->text : '?';
+         my $symbol     = $fc->precipitation->symbol->text;
          my $winddir    = $fc->wind_direction->name;
 
-         main::msg($target, "%s (%dm/%dft) :: %.1f°C / %.1f°F :: %s :: Cld: %d%% :: Hum: %d%% :: Fog: %d%% :: Wnd: %s from %s", $loc, int($alt), int($alt * 3.2808), $celsius, $fahrenheit, $symbol, $cloudiness, $humidity, $fog, $winddesc[$beaufort], $winddir);
+         main::msg($target, "%s (%dm/%dft) :: %.1f°C / %.1f°F :: %s :: Cld: %u%% :: Hum: %u%% :: Fog: %u%% :: Wnd: %s from %s", $loc, int($alt), int($alt * 3.2808), $celsius, $fahrenheit, $symbol, $cloudiness, $humidity, $fog, $winddesc[$beaufort], $winddir);
       }
    }
 }
