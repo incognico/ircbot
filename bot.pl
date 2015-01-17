@@ -4,7 +4,7 @@
 #
 # Copyright 2012-2015, Nico R. Wohlgemuth <nico@lifeisabug.com>
 
-our $version = '1.6';
+our $version = '1.7';
 
 use utf8;
 use strict;
@@ -122,14 +122,8 @@ $silent       = $profiles{$myprofile}{silent}       if (defined $profiles{$mypro
 
 $myhelptext =~ s/TRIGGER/$mytrigger/g if ($myhelptext);
 
-my %authedadmins;
-my %mychannels;
-my %myumodes;
-my %rejoinchannels;
-
-my $myaddr;
-my $port;
-my $server;
+my (%authedadmins, %mychannels, %myumodes, %rejoinchannels);
+my ($myaddr, $port, $server);
 
 if ($ipv6) {
    $myaddr = $myaddr6;
@@ -504,14 +498,7 @@ sub ircgate {
 sub joinchan {
    my ($chan, $key) = @_;
 
-   $chan = lc($chan);
-
-   if ($key) {
-      raw('JOIN %s %s', $chan, $key);
-   }
-   else {
-      raw('JOIN %s', $chan);
-   }
+   raw('JOIN %s %s', lc($chan), $key ? $key : '');
 }
 
 sub kick {
@@ -525,12 +512,7 @@ sub kick {
       return;
    }
 
-   if ($reason) {
-      raw('KICK %s %s :%s', $chan, $victim, $reason);
-   }
-   else {
-      raw('KICK %s %s', $chan, $victim);
-   }
+   raw('KICK %s %s :%s', $chan, $victim, $reason ? $reason : 'Bye.');
 }
 
 sub loadmodules {
@@ -628,12 +610,7 @@ sub ntc {
 sub partchan {
    my ($chan, $reason) = @_;
 
-   if ($reason) {
-      raw('PART %s :%s', $chan, $reason);
-   }
-   else {
-      raw('PART %s', $chan);
-   }
+   raw('PART %s :%s', $chan, $reason ? $reason : 'leaving');
 }
 
 sub raw {
@@ -680,7 +657,7 @@ sub unloadmodules {
 
 sub quit {
    $connected = 0;
-   raw('QUIT :obai!');
+   raw('QUIT :Bye!');
 }
 
 ### main hooks
@@ -857,7 +834,7 @@ sub on_privmsg {
    if (substr($msg, 0, 1) eq chr(1)) {
       if ($msg eq chr(1) . 'VERSION' . chr(1)) {
          printf("[%s] *** CTCP VERSION request by %s\n", scalar localtime, $nick);
-         ntc($nick, '%sVERSION bot.pl %s on UNIX%s', chr(1), $version, chr(1));
+         ntc($nick, '%sVERSION bot.pl %s on %s%s', chr(1), $version, $^O, chr(1));
       }
       elsif ($msg eq chr(1) . 'SOURCE' . chr(1)) {
          printf("[%s] *** CTCP SOURCE request by %s\n", scalar localtime, $nick);
