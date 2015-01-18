@@ -4,7 +4,7 @@
 #
 # Copyright 2012-2015, Nico R. Wohlgemuth <nico@lifeisabug.com>
 
-our $version = '1.8';
+our $version = '1.9';
 
 use utf8;
 use strict;
@@ -296,15 +296,19 @@ while (my @raw = split(' ', <$socket>)) {
          callhook('on_unavail', lc(substr($raw[2], 1))) if (ischan($raw[2]));
          # chan
       }
+      when ('439') {
+         callhook('on_unavail', lc($raw[3]), substr(join(' ', @raw[4..$#raw]), 1)) if (ischan($raw[3]));
+         # chan
+      }
       when ([qw(432 433 434)]) {
          callhook('on_nickinuse');
       }
       when ([qw(471 473 474 475)]) {
-         callhook('on_cantjoin', $raw[3]);
+         callhook('on_cantjoin', lc($raw[3]));
          # chan
       }
       when ('405') {
-         callhook('on_toomany', $raw[3]);
+         callhook('on_toomany', lc($raw[3]));
          # chan
       }
       when ('005') {
@@ -1030,7 +1034,7 @@ sub on_umodeg {
 sub on_unavail {
    my ($chan, $reason) = @_;
 
-   printf("[%s] *** Channel [%s] unavailable: %s -- retrying\n", scalar localtime, $chan, $reason);
+   printf("[%s] *** Channel [%s] unavailable: %s -- retrying\n", scalar localtime, $chan, $reason ? $reason : 'no reason given');
 
    $rejoinchannels{$myprofile}{$chan}++;
 }

@@ -24,7 +24,7 @@ my %recentkickchannels;
 ### start config
 
 my $cfgname  = "$ENV{HOME}/.bot/%s/%s.yml"; # package name, profile name
-my $minusers = 12;
+my $minusers = 1;
 
 ### end config
 
@@ -79,16 +79,6 @@ sub checksize {
    }
    else {
       return 0;
-   }
-}
-
-sub on_toomany {
-   my ($self, $chan) = @_;
-
-   if (defined $newjoins{$$myprofile}{$chan}) {
-      printf("[%s] === modules::%s: Channel limit reached; not joining [%s]\n", scalar localtime, __PACKAGE__, $chan);
-      main::ntc($newjoins{$$myprofile}{$chan}, q{Can't join %s. I'm on too many channels already.}, $chan);
-      on_ownpart($self, $chan);
    }
 }
 
@@ -418,6 +408,16 @@ sub on_synced {
    my ($self, $chan) = @_;
 
    finalizejoin($chan);
+}
+
+sub on_toomany {
+   my ($self, $chan) = @_;
+
+   if (defined $newjoins{$$myprofile}{$chan}) {
+      printf("[%s] === modules::%s: Channel limit reached; not joining [%s]\n", scalar localtime, __PACKAGE__, $chan);
+      main::ntc($newjoins{$$myprofile}{$chan}, q{Can't join %s. I'm on too many channels already.}, $chan);
+      on_ownpart($self, $chan);
+   }
 }
 
 sub on_unload {
