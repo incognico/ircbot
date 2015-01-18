@@ -82,6 +82,16 @@ sub checksize {
    }
 }
 
+sub on_toomany {
+   my ($self, $chan) = @_;
+
+   if (defined $newjoins{$$myprofile}{$chan}) {
+      printf("[%s] === modules::%s: Channel limit reached; not joining [%s]\n", scalar localtime, __PACKAGE__, $chan);
+      main::ntc($newjoins{$$myprofile}{$chan}, q{Can't join %s. I'm on too many channels already.}, $chan);
+      on_ownpart($self, $chan);
+   }
+}
+
 sub finalizejoin {
    my $chan = shift || return;
 
@@ -163,10 +173,10 @@ sub on_invite {
    }
 }
 
-sub on_keyedbanned {
+sub on_cantjoin {
    my ($self, $chan) = @_;
 
-   printf("[%s] === modules::%s: Banned/keyed, removing channel [%s]\n", scalar localtime, __PACKAGE__, $chan);
+   printf("[%s] === modules::%s: Can't join; removing channel [%s]\n", scalar localtime, __PACKAGE__, $chan);
    on_ownpart($self, $chan);
 }
 
@@ -186,6 +196,8 @@ sub on_ownquit {
 
 sub on_ownpart {
    my ($self, $chan) = @_;
+
+   delete $newjoins{$$myprofile}{$chan};
 
    if (exists $invitechannels{joinlist}{$$myprofile}{$chan}) {
       delete $invitechannels{joinlist}{$$myprofile}{$chan};
