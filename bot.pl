@@ -436,7 +436,7 @@ sub checkparams {
    if ($opt_p) {
       if (defined $profiles{$opt_p}) {
          $myprofile = $opt_p;
-         printf("[%s] === Starting bot [profile: %s]\n", scalar localtime, $myprofile);
+         printf("[%s] === Starting bot (v%.2f) [profile: %s]\n", scalar localtime, $version, $myprofile);
       }
       else {
          croak("Invalid profile specified (-p)");

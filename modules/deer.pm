@@ -4,12 +4,14 @@ use utf8;
 use strict;
 use warnings;
 
+no warnings 'qw';
+
 use DBI;
 
 ### start config
 
-my @cankill   = qw(nico!nico@korea-dpr.org);
-my $deerchan  = '#deer';
+my @deerchans = qw(#deer #moredeer);
+my $joindeer  = '#deer';
 my $deeritor  = 'http://example.com/deeritor';
 my $maxsearch = 20;
 
@@ -140,7 +142,7 @@ sub searchdeer {
 sub on_join {
    my ($self, $chan, $nick, undef, undef, undef) = @_;
 
-   return if ($chan ne $deerchan);
+   return if ($chan ne $joindeer);
 
    my ($ret, $creator, $irccode, $deer, $special) = fetchdeer('random');
 
@@ -159,7 +161,7 @@ sub on_join {
 sub on_privmsg {
    my ($self, $target, $msg, undef, undef, undef, undef, $who) = @_;
 
-   return if ($target ne $deerchan);
+   return unless ($target ~~ @deerchans);
 
    my @args = split(' ', $msg);
    my $cmd  = uc(shift(@args));
@@ -210,7 +212,7 @@ sub on_privmsg {
       }
    }
    elsif ($cmd eq 'DEERKILL') {
-      return unless($who ~~ @cankill);
+      return unless(main::isadmin($who));
 
       my ($ret, $killed) = killdeer($args[0]);
 
