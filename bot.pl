@@ -4,7 +4,7 @@
 #
 # Copyright 2012-2015, Nico R. Wohlgemuth <nico@lifeisabug.com>
 
-our $version = '1.7';
+our $version = '1.8';
 
 use utf8;
 use strict;
@@ -299,8 +299,12 @@ while (my @raw = split(' ', <$socket>)) {
       when ([qw(432 433 434)]) {
          callhook('on_nickinuse');
       }
-      when ([qw(473 474 475)]) {
-         callhook('on_keyedbanned', $raw[3]);
+      when ([qw(471 473 474 475)]) {
+         callhook('on_cantjoin', $raw[3]);
+         # chan
+      }
+      when ('405') {
+         callhook('on_toomany', $raw[3]);
          # chan
       }
       when ('005') {
@@ -377,31 +381,32 @@ sub callhook {
    my ($sub, @args) = @_;
 
    my %subs = (
-      on_autojoin    => \&on_autojoin,
-      on_connected   => \&on_connected,
-      on_invite      => \&on_invite,
-      on_isupport    => \&on_isupport,
-      on_join        => \&on_join,
-      on_keyedbanned => \&on_keyedbanned,
-      on_kick        => \&on_kick,
-      on_knock       => \&on_knock,
-      on_mode        => \&on_mode,
-      on_names       => \&on_names,
-      on_nick        => \&on_nick,
-      on_nickinuse   => \&on_nickinuse,
-      on_notice      => \&on_notice,
-      on_ownjoin     => \&on_ownjoin,
-      on_ownkick     => \&on_ownkick,
-      on_ownpart     => \&on_ownpart,
-      on_ownquit     => \&on_ownquit,
-      on_part        => \&on_part,
-      on_ping        => \&on_ping,
-      on_privmsg     => \&on_privmsg,
-      on_quit        => \&on_quit,
-      on_synced      => \&on_synced,
-      on_umodeg      => \&on_umodeg,
-      on_unavail     => \&on_unavail,
-      on_userhost    => \&on_userhost,
+      on_autojoin  => \&on_autojoin,
+      on_cantjoin  => \&on_cantjoin,
+      on_connected => \&on_connected,
+      on_invite    => \&on_invite,
+      on_isupport  => \&on_isupport,
+      on_join      => \&on_join,
+      on_kick      => \&on_kick,
+      on_knock     => \&on_knock,
+      on_mode      => \&on_mode,
+      on_names     => \&on_names,
+      on_nick      => \&on_nick,
+      on_nickinuse => \&on_nickinuse,
+      on_notice    => \&on_notice,
+      on_ownjoin   => \&on_ownjoin,
+      on_ownkick   => \&on_ownkick,
+      on_ownpart   => \&on_ownpart,
+      on_ownquit   => \&on_ownquit,
+      on_part      => \&on_part,
+      on_ping      => \&on_ping,
+      on_privmsg   => \&on_privmsg,
+      on_quit      => \&on_quit,
+      on_synced    => \&on_synced,
+      on_toomany   => \&on_toomany,
+      on_umodeg    => \&on_umodeg,
+      on_unavail   => \&on_unavail,
+      on_userhost  => \&on_userhost,
    );
 
    if (exists $subs{$sub}) {
