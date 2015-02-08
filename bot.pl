@@ -4,8 +4,6 @@
 #
 # Copyright 2012-2015, Nico R. Wohlgemuth <nico@lifeisabug.com>
 
-our $version = '1.9';
-
 use utf8;
 use strict;
 use warnings;
@@ -16,6 +14,8 @@ use sigtrap 'handler', \&quit, 'INT';
 use threads;
 use threads::shared;
 
+my $version = '1.10';
+
 no warnings 'qw';
 
 use Carp;
@@ -24,8 +24,7 @@ use FindBin '$RealBin';
 use Getopt::Std;
 use Module::Refresh;
 
-our $opt_p;
-getopt('p');
+getopt('p', \my %opts);
 my $myprofile; # -p overrides
 
 ### start config
@@ -433,10 +432,10 @@ sub chantrim {
 }
 
 sub checkparams {
-   if ($opt_p) {
-      if (defined $profiles{$opt_p}) {
-         $myprofile = $opt_p;
-         printf("[%s] === Starting bot (v%.2f) [profile: %s]\n", scalar localtime, $version, $myprofile);
+   if ($opts{p}) {
+      if (defined $profiles{$opts{p}}) {
+         $myprofile = $opts{p};
+         printf("[%s] === Starting bot (v%s) [profile: %s]\n", scalar localtime, $version, $myprofile);
       }
       else {
          croak("Invalid profile specified (-p)");
