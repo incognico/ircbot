@@ -2,13 +2,14 @@
 
 # ./bot.pl -p <profile name>
 #
-# Copyright 2012-2015, Nico R. Wohlgemuth <nico@lifeisabug.com>
+# Copyright 2012-2016, Nico R. Wohlgemuth <nico@lifeisabug.com>
 
 use utf8;
 use strict;
 use warnings;
 
-use feature 'switch';
+use 5.16.0;
+
 use sigtrap 'handler', \&quit, 'INT';
 
 use threads;
@@ -465,7 +466,7 @@ sub ircgate {
    if (-e $file) {
       printf("[%s] === ircgate: available!\n", scalar localtime);
 
-      my $tail = File::Tail->new(name => $file, reset_tail => 0, maxbuf => 576, maxinterval => 1);
+      my $tail = File::Tail->new(name => $file, reset_tail => 0, maxbuf => 2048, maxinterval => 1);
 
       while (defined(my $line = $tail->read)) {
          my @data = split(' ', $line);
