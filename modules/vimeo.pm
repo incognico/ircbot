@@ -29,7 +29,9 @@ sub new {
    return $self;
 }
 
-sub tsep {                                                                                                                                       my $unformatted = shift || 0;                                                                                                                 my $formatted = reverse(join('.', (reverse $unformatted) =~ /([0-9]{1,3})/g));
+sub tsep {
+   my $unformatted = shift || 0;
+   my $formatted = reverse(join('.', (reverse $unformatted) =~ /([0-9]{1,3})/g));
    return $formatted;
 }
 
