@@ -18,6 +18,7 @@ use threads::shared;
 my $version = '1.10';
 
 no warnings 'qw';
+no warnings 'experimental::smartmatch';
 
 use Carp;
 use File::Tail;
