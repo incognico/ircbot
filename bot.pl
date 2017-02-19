@@ -456,7 +456,8 @@ sub err {
 }
 
 sub hlp {
-   my ($target, $string) = @_;
+   my $target = shift;
+   my $string = sprintf(shift, @_);
 
    msg($target, 'help: %s {::%s}', $string, caller(0)) unless ($silent);
 }

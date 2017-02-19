@@ -265,14 +265,14 @@ sub on_privmsg {
 
                if ($args[1]) {
                   if ($cargs[1] eq 'VERBOSE' || $cargs[1] eq 'V') {
-                     for (sort(keys($invitechannels{joinlist}{$$myprofile}))) {
+                     for (sort(keys(%{$invitechannels{joinlist}{$$myprofile}}))) {
                         $count++;
                         main::msg($target, '%s - %u - %s', $_, scalar keys %{$mychannels->{$$myprofile}{$_}}, $invitechannels{joinlist}{$$myprofile}{$_});
                      }
                   }
                }
                elsif (!$args[1]) {
-                  for (sort(keys($invitechannels{joinlist}{$$myprofile}))) {
+                  for (sort(keys(%{$invitechannels{joinlist}{$$myprofile}}))) {
                      $count++;
                      $chans .= $_ . ', ';
                   }
@@ -308,7 +308,7 @@ sub on_privmsg {
                my $chans;
                my $count = 0;
 
-               for (sort(keys($invitechannels{blacklist}{$$myprofile}))) {
+               for (sort(keys(%{$invitechannels{blacklist}{$$myprofile}}))) {
                   $count++;
                   $chans .= $_ . ', ';
                }

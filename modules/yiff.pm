@@ -51,7 +51,7 @@ sub on_join {
    my ($self, $chan, $nick, undef, undef, undef) = @_;
 
    unless ($nick eq $$mynick) {
-      my $user = $mychannels->{$$myprofile}{$chan}{(keys $mychannels->{$$myprofile}{$chan})[int rand keys $mychannels->{$$myprofile}{$chan}]};
+      my $user = $mychannels->{$$myprofile}{$chan}{(keys %{$mychannels->{$$myprofile}{$chan}})[int rand keys %{$mychannels->{$$myprofile}{$chan}}]};
       my $yiff;
 
       $yiff = $yiffs[int(rand(@yiffs))];
