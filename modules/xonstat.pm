@@ -120,13 +120,13 @@ sub on_privmsg {
          my $rankm   = $stats->[0]->{ranks}->{overall}->{rank} ? $stats->[0]->{ranks}->{overall}->{max_rank}     : 0;
          my $rankt   = $stats->[0]->{ranks}->{overall}->{rank} ? $stats->[0]->{ranks}->{overall}->{game_type_cd} : 0;
          my $rankpct = $stats->[0]->{ranks}->{overall}->{rank} ? $stats->[0]->{ranks}->{overall}->{percentile}   : 0;
-         my $elo     = $stats->[0]->{elos}->{overall}->{elo};
-         my $elot    = $stats->[0]->{elos}->{overall}->{game_type_cd};
+         my $elo     = $stats->[0]->{elos}->{overall}->{elo}   ? $stats->[0]->{elos}->{overall}->{elo}           : 0;
+         my $elot    = $stats->[0]->{elos}->{overall}->{elo}   ? $stats->[0]->{elos}->{overall}->{game_type_cd}  : 0;
          my $favmap  = $stats->[0]->{fav_maps}->{overall}->{map_name};
          my $favmapt = $stats->[0]->{fav_maps}->{overall}->{game_type_cd};
         (my $last    = $stats->[0]->{overall_stats}->{overall}->{last_played_fuzzy}) =~ s/about /~/;
          
-         main::msg($target, "%s :: games: %d/%d/%d (%.2f%% win) :: k/d: %.2f (%d/%d)%s :: %s elo: %.2f :: fav map: %s(%s) :: last seen %s", $snick, $games, $win, $loss, $pct, $ratio, $kills, $deaths, $rank ? sprintf(" :: %s rank: %d/%d (%.2f pctl.)", $rankt, $rank, $rankm, $rankpct) : '', $elot, $elo, $favmap, $favmapt, $last);
+         main::msg($target, "%s :: games: %d/%d/%d (%.2f%% win) :: k/d: %.2f (%d/%d)%s%s :: fav map: %s(%s) :: last seen %s", $snick, $games, $win, $loss, $pct, $ratio, $kills, $deaths, $rank ? sprintf(" :: %s rank: %d/%d (%.2f pctl.)", $rankt, $rank, $rankm, $rankpct) : '', $elo ? sprintf(" :: %s elo: %.2f", $elot, $elo) : '', $favmap, $favmapt, $last);
       }
    }
 }
