@@ -116,27 +116,15 @@ sub on_privmsg {
          my $kills   = $stats->[0]->{overall_stats}->{overall}->{total_kills};
          my $deaths  = $stats->[0]->{overall_stats}->{overall}->{total_deaths};
          my $ratio   = $stats->[0]->{overall_stats}->{overall}->{k_d_ratio};
-         my $rank    = $stats->[0]->{ranks}->{overall}->{rank} ? $stats->[0]->{ranks}->{overall}->{rank}         : 0;
-         my $rankm   = $stats->[0]->{ranks}->{overall}->{rank} ? $stats->[0]->{ranks}->{overall}->{max_rank}     : 0;
-         my $rankt   = $stats->[0]->{ranks}->{overall}->{rank} ? $stats->[0]->{ranks}->{overall}->{game_type_cd} : 0;
-         my $rankpct = $stats->[0]->{ranks}->{overall}->{rank} ? $stats->[0]->{ranks}->{overall}->{percentile}   : 0;
-         my $elo     = $stats->[0]->{elos}->{overall}->{elo}   ? $stats->[0]->{elos}->{overall}->{elo}           : 0;
-         my $elot    = $stats->[0]->{elos}->{overall}->{elo}   ? $stats->[0]->{elos}->{overall}->{game_type_cd}  : 0;
+         my $elo     = $stats->[0]->{elos}->{overall}->{elo} ? $stats->[0]->{elos}->{overall}->{elo}          : 0;
+         my $elot    = $stats->[0]->{elos}->{overall}->{elo} ? $stats->[0]->{elos}->{overall}->{game_type_cd} : 0;
+         my $elog    = $stats->[0]->{elos}->{overall}->{elo} ? $stats->[0]->{elos}->{overall}->{games}        : 0;
+         my $capr    = $stats->[0]->{overall_stats}->{ctf}->{cap_ratio} ? $stats->[0]->{overall_stats}->{ctf}->{cap_ratio} : 0;
          my $favmap  = $stats->[0]->{fav_maps}->{overall}->{map_name};
          my $favmapt = $stats->[0]->{fav_maps}->{overall}->{game_type_cd};
         (my $last    = $stats->[0]->{overall_stats}->{overall}->{last_played_fuzzy}) =~ s/about /~/;
 
-         my ($rank2, $rankm2, $rankpct2);
-
-         if ($elo && $rank && $rankt ne $elot) {
-            $rank2    = $stats->[0]->{ranks}->{$elot}->{rank} ? $stats->[0]->{ranks}->{$elot}->{rank}       : 0;
-            $rankm2   = $stats->[0]->{ranks}->{$elot}->{rank} ? $stats->[0]->{ranks}->{$elot}->{max_rank}   : 0;
-            $rankpct2 = $stats->[0]->{ranks}->{$elot}->{rank} ? $stats->[0]->{ranks}->{$elot}->{percentile} : 0;
-         }
-
-         my $elo2 = $rank ? $stats->[0]->{elos}->{$rankt}->{elo} : 0;
-
-         main::msg($target, "%s :: games: %d/%d/%d (%.2f%% win) :: k/d: %.2f (%d/%d)%s%s :: fav map: %s (%s) :: last seen %s", $snick, $games, $win, $loss, $pct, $ratio, $kills, $deaths, $rank ? sprintf(" :: %s rank: %d/%d (%.2f pctl.) elo: %.2f", $rankt, $rank, $rankm, $rankpct, $elo2) : '', $rank2 ? sprintf(" :: %s rank: %d/%d (%.2f pctl.) elo: %.2f", $elot, $rank2, $rankm2, $rankpct2, $elo) : '', $favmap, $favmapt, $last);
+         main::msg($target, "%s :: games: %d/%d/%d (%.2f%% win) :: k/d: %.2f (%d/%d)%s :: fav map: %s (%s) :: last played %s", $snick, $games, $win, $loss, $pct, $ratio, $kills, $deaths, ($elo && $elo ne 100) ? sprintf(' :: %s elo: %.2f (%d games%s)', $elot, $elo, $elog, $elot eq 'ctf' ? sprintf(', %.2f cr', $capr) : '' ) : '', $favmap, $favmapt, $last);
       }
    }
 }
