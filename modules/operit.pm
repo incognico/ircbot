@@ -4,6 +4,8 @@ use utf8;
 use strict;
 use warnings;
 
+use experimental 'smartmatch';
+
 no warnings 'qw';
 
 my $mytrigger;

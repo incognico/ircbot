@@ -7,6 +7,7 @@ use warnings;
 use Data::Dumper;
 
 my $channels;
+my $logtodb;
 my $myadmins;
 my $mychannels;
 my $myhelptext;
@@ -24,6 +25,7 @@ sub new {
    my $self = bless(\%self, $package);
 
    $channels   = $self->{channels};
+   $logtodb    = $self->{logtodb};
    $myadmins   = $self->{myadmins};
    $mychannels = $self->{mychannels};
    $myhelptext = $self->{myhelptext};
@@ -118,7 +120,7 @@ sub on_privmsg {
       elsif ($cmd eq 'EVAL') {
          if ($args[0]) {
             eval("@args");
-            main::msg($target, $@) if $@;
+            main::msg($target, $@) if ($@);
          }
          else {
             main::hlp($target, 'syntax: EVAL <perl code>');

@@ -1,5 +1,7 @@
 package weather;
 
+use lib '/etc/perl';
+
 use utf8;
 use strict;
 use warnings;
@@ -36,8 +38,9 @@ my @winddesc = (
 
 ### start config
 
-my $cfgname = "$ENV{HOME}/.bot/%s/%s.yml"; # package name, profile name
-my $elevurl = 'https://maps.googleapis.com/maps/api/elevation/json?locations=';
+my $cfgname  = "$ENV{HOME}/.bot/%s/%s.yml"; # package name, profile name
+my $gmapikey = '';
+my $elevurl  = "https://maps.googleapis.com/maps/api/elevation/json?key=$gmapikey&locations=";
 
 ### end config
 
@@ -108,7 +111,7 @@ sub on_privmsg {
             }
          }
          else {
-            my $geo = Geo::Coder::Google->new(apiver => 3, language => 'en');
+            my $geo = Geo::Coder::Google->new(apiver => 3, language => 'en', key => $gmapikey);
 
             my $input;
             eval { $input = $geo->geocode(location => "@args") };

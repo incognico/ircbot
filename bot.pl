@@ -2,7 +2,7 @@
 
 # ./bot.pl -p <profile name>
 #
-# Copyright 2012-2016, Nico R. Wohlgemuth <nico@lifeisabug.com>
+# Copyright 2012-2019, Nico R. Wohlgemuth <nico@lifeisabug.com>
 
 use utf8;
 use strict;
@@ -15,7 +15,7 @@ use sigtrap 'handler', \&quit, 'INT';
 use threads;
 use threads::shared;
 
-my $version = '1.10';
+my $version = '9999';
 
 no warnings 'qw';
 no warnings 'experimental::smartmatch';
@@ -107,6 +107,8 @@ my $ipv6        = $profiles{$myprofile}{ipv6}        || 0;
 my $ssl         = $profiles{$myprofile}{ssl}         || 0;
 my $auth        = $profiles{$myprofile}{auth}        || 0;
 my $loc         = $profiles{$myprofile}{loc}         || 0;
+my $autosend    = $profiles{$myprofile}{autosend}    || 0;
+
 my @mychantypes = defined $profiles{$myprofile}{chantypes} ? @{$profiles{$myprofile}{chantypes}} : qw(# &);
 
 $myaddr4      = $profiles{$myprofile}{addr4}        if (defined $profiles{$myprofile}{addr4});
@@ -372,6 +374,9 @@ sub act {
 
 sub authenticate {
    raw('PRIVMSG %s :%s %s', $authserv, $authcmd, $mypass);
+   raw($autosend) if ($autosend);
+   sleep 1;
+   raw('MODE %s %s', $mynick, $mydefumode) if ($mydefumode);
 }
 
 sub autojoin {

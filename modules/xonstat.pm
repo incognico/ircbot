@@ -100,7 +100,7 @@ sub on_privmsg {
          }
          else {
             main::msg($target, 'no response from server');
-            return
+            return;
          }
 
          $idmap{$nick}{id} = $qid;

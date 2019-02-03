@@ -26,7 +26,8 @@ sub new {
 sub on_privmsg {
    my ($self, $target, $msg, $ischan, $nick, undef, undef, undef) = @_;
 
-   $target = $nick unless ($ischan);
+   #$target = $nick unless ($ischan);
+   return unless ($ischan);
 
    if (substr($msg, 0, 1) eq $$mytrigger) {
       my @args = split(' ', $msg);

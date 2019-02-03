@@ -36,7 +36,7 @@ sub new {
 }
 
 sub mysql_connect {
-   unless ($dbh = DBI->connect("DBI:mysql:$sql{db}:$sql{host}", $sql{user}, $sql{pass}, {mysql_auto_reconnect => 1, mysql_enable_utf8 => 1})) {
+   unless ($dbh = DBI->connect("DBI:mysql:$sql{db}:$sql{host}", $sql{user}, $sql{pass}, {mysql_connect_timeout => 2, mysql_auto_reconnect => 1, mysql_enable_utf8 => 1})) {
       printf("[%s] !!! modules::%s: %s\n", scalar localtime, __PACKAGE__, $DBI::errstr);
       return 1;
    }

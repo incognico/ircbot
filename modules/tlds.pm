@@ -47,7 +47,8 @@ sub on_privmsg {
       my @args = split(' ', $msg);
       my $cmd = uc(substr(shift(@args), 1));
 
-      $target = $nick unless ($ischan);
+      #$target = $nick unless ($ischan);
+      return unless ($ischan);
 
       # cmds
       if ($cmd eq 'TLD') {

@@ -4,7 +4,7 @@ use utf8;
 use strict;
 use warnings;
 
-use feature 'switch';
+use experimental 'switch';
 
 my $mytrigger;
 
@@ -56,7 +56,8 @@ sub on_privmsg {
       my @args = split(' ', $msg);
       my $cmd = uc(substr(shift(@args), 1));
 
-      $target = $nick unless ($ischan);
+      #$target = $nick unless ($ischan);
+      return unless ($ischan);
 
       # cmds 
       if ($cmd eq 'DDG' || $cmd eq 'D') {
@@ -65,7 +66,7 @@ sub on_privmsg {
 
             my $query    = uri_escape("@args");
             my $ua       = LWP::UserAgent->new;
-            my $response = $ua->get('http://api.duckduckgo.com/?format=json&no_html=1&no_redirect=1&kp=-1&q=' . $query);
+            my $response = $ua->get('http://api.duckduckgo.com/?format=json&no_html=1&no_redirect=1&q=' . $query);
 
             if ($response->is_success) {
                my $ddg = decode_json($response->decoded_content);  

@@ -24,7 +24,7 @@ my %recentkickchannels;
 ### start config
 
 my $cfgname  = "$ENV{HOME}/.bot/%s/%s.yml"; # package name, profile name
-my $minusers = 1;
+my $minusers = 5;
 
 ### end config
 
@@ -202,9 +202,9 @@ sub on_ping {
       $count = 0;
       delete $recentkickchannels{$$myprofile};
 
-      #for (keys(%{$invitechannels{joinlist}{$$myprofile}})) {
-      #   checksize($_);
-      #}
+      for (keys(%{$invitechannels{joinlist}{$$myprofile}})) {
+         checksize($_);
+      }
    }
    else {
       $count++;

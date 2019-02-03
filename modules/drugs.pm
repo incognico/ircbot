@@ -1,4 +1,4 @@
-package urban;
+package drugs;
 
 use utf8;
 use strict;
@@ -34,25 +34,20 @@ sub on_privmsg {
       return unless ($ischan);
 
       # cmds 
-      if ($cmd eq 'URBAN' || $cmd eq 'UD' || $cmd eq 'U') {
+      if ($cmd eq 'DRUG') {
          if ($args[0]) {
-            printf("[%s] === modules::%s: Urban [%s] on %s by %s\n", scalar localtime, __PACKAGE__, "@args", $target, $nick);
+            printf("[%s] === modules::%s: Drugs [%s] on %s by %s\n", scalar localtime, __PACKAGE__, "@args", $target, $nick);
 
             my $query    = uri_escape("@args");
             my $ua       = LWP::UserAgent->new;
-            my $response = $ua->get('http://api.urbandictionary.com/v0/define?term=' . $query);
+            my $response = $ua->get('http://tripbot.tripsit.me/api/tripsit/getDrug?name=' . $query);
             
             if ($response->is_success) {
-               my $ud = decode_json($response->decoded_content);
+               my $drg = decode_json($response->decoded_content);
 
-               if (defined $$ud{list}[0]{definition}) {
-                  for (0..2) {
-                     $$ud{list}[$_]{definition} =~ s/\s+/ /g;
+               if (defined $$drg{data}[0]{properties}{summary}) {
+                     main::msg($target, '%s', (length($$drg{data}[0]{properties}{summary}) > 399) ? substr($$drg{data}[0]{properties}{summary}, 0, 400) . '...' : $$drg{data}[0]{properties}{summary});
 
-                     main::msg($target, '%d/%d %s:: %s', $_+1, $#{$$ud{list}}+1, (lc($$ud{list}[$_]{word}) ne lc("@args")) ? $$ud{list}[$_]{word} . ' ' : '', (length($$ud{list}[$_]{definition}) > 199) ? substr($$ud{list}[$_]{definition}, 0, 200) . '...' : $$ud{list}[$_]{definition});
-
-                     last unless (defined $$ud{list}[$_+1]{definition});
-                  }
                }
                else {
                    main::msg($target, 'no match');
@@ -63,7 +58,7 @@ sub on_privmsg {
             }
          }
          else {
-            main::hlp($target, 'syntax: URBAN(UD|U) <term>');
+            main::hlp($target, 'syntax: DRUG <term>');
          }
       }
    }
