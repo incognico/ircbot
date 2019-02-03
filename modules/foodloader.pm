@@ -96,7 +96,7 @@ sub on_privmsg {
             }
          }
          else {
-            main::hlp($target, 'syntax: FL <search string>');
+            main::hlp($target, 'syntax: FL <search string|random>');
          }
       }
    }
