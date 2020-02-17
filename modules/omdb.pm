@@ -42,7 +42,7 @@ sub on_privmsg {
             my $title = uri_escape("@args");
 
             my $type = 't';
-            $type = 'i' if ($title =~ /((?:tt)?\d{7})/);
+            $type = 'i' if ($title =~ /((?:tt)?\d{7,8})/);
 
             my $url = 'http://www.omdbapi.com/?apikey=XXXXXXXX';
             $url .= '&' . $type . '=' . $title;
