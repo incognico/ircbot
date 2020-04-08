@@ -24,12 +24,7 @@ sub on_privmsg {
   
    # cmds
    if ($msg =~ /^((?:\[\s\]\s[^\[\]]+\s?)+)/) {
-      if ($ischan) {
-         return if (exists $mychannels->{rizon}{$target}{Cherry});
-      }
-      else {
-         return;
-      }
+      $target = $nick unless ($ischan);
 
       my @x;
 

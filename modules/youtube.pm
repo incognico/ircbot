@@ -62,7 +62,7 @@ my %ignore = (
          '#channelname' => 1,
       },
    },
-};
+);
 
 my %pause;
 

@@ -11,7 +11,11 @@ use Encode;
 
 my $mytrigger;
 
+### start config
+
 my $apikey = '';
+
+#### end config
 
 ### functions
 
