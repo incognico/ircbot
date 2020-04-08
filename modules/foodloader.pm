@@ -13,8 +13,8 @@ my $dbh;
 ### start config
 
 my %sql = (
-   db    => "/srv/www/foodloader.net/db/foodloader.db",
-   table => 'foodloader',
+   db    => '',
+   table => '',
 );
 
 ### end config

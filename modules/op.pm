@@ -15,11 +15,9 @@ my $mytrigger;
 my $autoop = 1;
 
 my @opchans = qw(
-#example
 );
 
 my @ophosts = qw(
-example.com
 );
 
 ### end config

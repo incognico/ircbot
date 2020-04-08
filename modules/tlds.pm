@@ -10,7 +10,6 @@ my %tlds;
 
 ### start config
 
-# https://github.com/nwohlgem/list-of-top-level-domains/raw/master/tlds.csv
 my $csv = sprintf("$ENV{HOME}/.bot/%s/%s.csv", __PACKAGE__, __PACKAGE__);
 
 ### end config

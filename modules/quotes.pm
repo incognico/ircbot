@@ -12,8 +12,8 @@ my $dbh;
 
 ### start config
 
-my $quotechan = '#example';
-my @candel = qw(mask!of@users.who.can.delete.quotes);
+my $quotechan = '';
+my @candel = qw();
 my %sql = (
    db    => "$ENV{HOME}/.bot/quotes/quotes.db",
    table => 'quotes',

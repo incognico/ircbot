@@ -4,7 +4,6 @@ use utf8;
 use strict;
 use warnings;
 
-use DBI;
 use Encode;
 use JSON 'decode_json';
 use LWP::UserAgent 'get';
@@ -60,10 +59,10 @@ my %ignore = (
    },
    announce => {
       profilename => {
-         'channelname' => 1,
+         '#channelname' => 1,
       },
    },
-);
+};
 
 my %pause;
 

@@ -4,15 +4,17 @@ use utf8;
 use strict;
 use warnings;
 
+use experimental 'smartmatch';
+
 no warnings 'qw';
 
 use DBI;
 
 ### start config
 
-my @deerchans = qw(#deer #moredeer);
-my $joindeer  = '#deer';
-my $deeritor  = 'http://example.com/deeritor';
+my @deerchans = qw();
+my $joindeer  = '';
+my $deeritor  = '';
 my $maxsearch = 20;
 
 my %sql = (

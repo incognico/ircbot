@@ -15,7 +15,6 @@ my %operitqueue;
 ### start config
 
 my @operitchans = qw(
-#example
 );
 
 ### end config

@@ -24,9 +24,14 @@ sub on_privmsg {
   
    # cmds
    if ($msg =~ /^((?:\[\s\]\s[^\[\]]+\s?)+)/) {
-      $target = $nick unless ($ischan);
+      if ($ischan) {
+         return if (exists $mychannels->{rizon}{$target}{Cherry});
+      }
+      else {
+         return;
+      }
 
-      my (@x, $y);
+      my @x;
 
       $msg =~ s/(\[\s\]\s[^\[\]]+)+?\s?/push @x,$1/eg;
       $x[int(rand(@x))] =~ s/\[\s\]/[x]/;

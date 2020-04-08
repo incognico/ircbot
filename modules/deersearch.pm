@@ -58,6 +58,8 @@ sub on_privmsg {
       my @args = split(' ', $msg);
       my $cmd = uc(substr(shift(@args), 1));
 
+      return unless ($target eq '#/dev/null' || $target eq '#awesomecougars' || $target eq '#deer');
+
       # cmds
       if ($cmd eq 'DEERSEARCH' || $cmd eq 'DS') {
          if ($args[0]) {

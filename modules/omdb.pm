@@ -11,6 +11,8 @@ use Encode;
 
 my $mytrigger;
 
+my $apikey = '';
+
 ### functions
 
 sub new {
@@ -39,13 +41,14 @@ sub on_privmsg {
          if ($args[0]) {
             printf("[%s] === modules::%s: OMDB [%s] on %s by %s\n", scalar localtime, __PACKAGE__, "@args", $target, $nick);
 
-            my $year  = pop(@args) if ($args[$#args] =~ /^\d{4}$/);
+            my $year;
+            $year  = pop(@args) if ($args[-1] =~ /^\d{4}$/);
             my $title = uri_escape("@args");
 
             my $type = 't';
             $type = 'i' if ($title =~ /((?:tt)?\d{7,8})/);
 
-            my $url = 'http://www.omdbapi.com/?apikey=XXXXXXXX';
+            my $url = 'http://www.omdbapi.com/?apikey=' . $apikey;
             $url .= '&' . $type . '=' . $title;
             $url .= '&y=' . $year if ($year);
 
