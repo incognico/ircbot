@@ -8,12 +8,12 @@ use experimental 'switch';
 
 my $mytrigger;
 
-use Encode;
 use HTML::Entities;
 use JSON;
 use LWP::UserAgent;
 use URI::Escape;
 use WWW::Shorten 'TinyURL';
+#use Encode::Simple qw(encode_utf8 decode_utf8);
 
 ### functions
 
@@ -72,12 +72,12 @@ sub on_privmsg {
                my $ddg = decode_json($response->decoded_content);  
                my $ans = $$ddg{Answer};
                my $def = $$ddg{Definition};
-               #my $rdr = decode('UTF-8', uri_unescape($$ddg{Redirect}));
+               #my $rdr = decode_utf8(uri_unescape($$ddg{Redirect}));
                my $rdr = $$ddg{Redirect};
                my $src = $$ddg{AbstractSource};
                my $tpe = $$ddg{Type};
                my $txt = decode_entities($$ddg{AbstractText});
-               #my $url = decode('UTF-8', uri_unescape($$ddg{AbstractURL}));
+               #my $url = decode_utf8(uri_unescape($$ddg{AbstractURL}));
                my $url = $$ddg{AbstractURL};
 
                map { s/<[^>]*>//g; s/\s+/ /g; s/%/%%/g } ($ans, $def, $txt);

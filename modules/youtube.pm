@@ -4,7 +4,7 @@ use utf8;
 use strict;
 use warnings;
 
-use Encode;
+use Encode::Simple qw(encode_utf8 decode_utf8);
 use JSON 'decode_json';
 use LWP::UserAgent 'get';
 
@@ -133,7 +133,7 @@ sub on_privmsg {
             my $likes    = $json->{items}[0]{statistics}{likeCount} ? $json->{items}[0]{statistics}{likeCount} : 0;
             my $player   = $json->{items}[0]{player}{embedHtml};
             my $playtime = $json->{items}[0]{contentDetails}{duration};
-            my $title    = encode('UTF-8', $json->{items}[0]{snippet}{title});
+            my $title    = encode_utf8($json->{items}[0]{snippet}{title});
             my $views    = $json->{items}[0]{statistics}{viewCount} ? tsep($json->{items}[0]{statistics}{viewCount}) : 0;
 
             return if ($title =~ m!youtube\.com/.+[?&]v=([\w-]+)! || $title =~ m!youtu\.be/([\w-]+)!);

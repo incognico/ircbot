@@ -7,7 +7,7 @@ use warnings;
 use JSON;
 use LWP::UserAgent;
 use URI::Escape;
-use Encode;
+use Encode::Simple qw(encode_utf8 decode_utf8);
 
 my $mytrigger;
 
@@ -61,7 +61,7 @@ sub on_privmsg {
             my $response = $ua->get($url);
 
             if ($response->is_success) {
-               my $omdb = from_json ( Encode::decode_utf8( $response->decoded_content ) );
+               my $omdb = from_json ( decode_utf8( $response->decoded_content ) );
 
                if ($$omdb{Response} eq 'True') {
                   $$omdb{Plot} = substr($$omdb{Plot}, 0, 178) . '..' if (length($$omdb{Plot}) > 180);
