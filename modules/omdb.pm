@@ -14,7 +14,7 @@ my $mytrigger;
 
 my $apikey = '';
 
-#### end config
+### end config
 
 ### functions
 
@@ -45,11 +45,12 @@ sub on_privmsg {
             printf("[%s] === modules::%s: OMDB [%s] on %s by %s\n", scalar localtime, __PACKAGE__, "@args", $target, $nick);
 
             my $year;
-            $year  = pop(@args) if ($args[-1] =~ /^\d{4}$/);
-            my $title = uri_escape("@args");
+            $year = pop(@args) if ($args[-1] =~ /^\(?\d{4}\)?$/);
+            $year =~ s/[^\d]//g;
+            my $title = join ' ', @args;
 
             my $type = 't';
-            $type = 'i' if ($title =~ /((?:tt)?\d{7,8})/);
+            $type = 'i' if ($title =~ /(tt\d{7,8})/);
 
             my $url = 'http://www.omdbapi.com/?apikey=' . $apikey;
             $url .= '&' . $type . '=' . $title;
