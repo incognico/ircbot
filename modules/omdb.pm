@@ -46,7 +46,7 @@ sub on_privmsg {
 
             my $year;
             $year = pop(@args) if ($args[-1] =~ /^\(?\d{4}\)?$/);
-            $year =~ s/[^\d]//g;
+            $year =~ s/[^\d]//g if ($year);
             my $title = join ' ', @args;
 
             my $type = 't';
