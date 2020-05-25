@@ -10,7 +10,7 @@ use DateTime::TimeZone;
 use Geo::Coder::Google;
 use JSON 'decode_json';
 use LWP::Simple;
-use Weather::YR;
+use Weather::METNO;
 use YAML::Tiny qw(LoadFile DumpFile);
 
 my $myprofile;
@@ -19,22 +19,6 @@ my $mytrigger;
 my $cfg;
 my $changed;
 my %userlocations;
-
-my @winddesc = (
-   'Calm',
-   'Light air',
-   'Light breeze',
-   'Gentle breeze',
-   'Moderate breeze',
-   'Fresh breeze',
-   'Strong breeze',
-   'High wind',
-   'Gale',
-   'Strong gale',
-   'Storm',
-   'Violent storm',
-   'Hurricane'
-);
 
 ### start config
 
@@ -146,26 +130,9 @@ sub on_privmsg {
 
          printf("[%s] === modules::%s: Weather [%s] on %s by %s\n", scalar localtime, __PACKAGE__, $loc, $target, $nick);
 
-         my $fcloc;
-         eval { $fcloc = Weather::YR->new(lat => $lat, lon => $lon, msl => int($alt), tz => DateTime::TimeZone->new(name => 'Europe/Oslo'), lang => 'en') };
+         my $w = Weather::METNO->new(lat => $lat, lon => $lon, alt => $alt, lang => 'en');
 
-         unless ($fcloc) {
-            main::msg($target, 'error fetching weather data, try again later');
-            return;
-         }
-
-         my $fc = $fcloc->location_forecast->now;
-            
-         my $beaufort   = $fc->wind_speed->beaufort;
-         my $celsius    = $fc->temperature->celsius;
-         my $cloudiness = $fc->cloudiness->percent;
-         my $fahrenheit = $fc->temperature->fahrenheit;
-         my $fog        = $fc->fog->percent;
-         my $humidity   = $fc->humidity->percent;
-         my $symbol     = $fc->precipitation->symbol->text;
-         my $winddir    = $fc->wind_direction->name;
-
-         main::msg($target, "%s (%dm/%dft) :: %.1f°C / %.1f°F :: %s :: Cld: %u%% :: Hum: %u%% :: Fog: %u%% :: Wnd: %s from %s", $loc, int($alt), int($alt * 3.2808), $celsius, $fahrenheit, $symbol, $cloudiness, $humidity, $fog, $winddesc[$beaufort], $winddir);
+         main::msg($target, '%s (%dm) :: %.1f°C :: %s :: Cld: %u%% :: Hum: %u%% :: Fog: %u%% :: UV: %.1f :: Wnd: %s from %s', $loc, int($alt), $w->temp_c, $w->symbol_txt, $w->cloudiness, $w->humidity, $w->foginess, $w->uvindex, $w->windspeed_bft_txt, $w->windfrom_dir);
       }
    }
 }

@@ -14,7 +14,7 @@ my $mytrigger;
 ### start config
 
 my $key = '';
-my $url = 'https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics,player&key=' . $key;
+my $url = 'https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&key=' . $key;
 
 my %categories = (
     1 => 'Film & Animation',
@@ -111,7 +111,7 @@ sub on_privmsg {
       my $id = $1;
       
       if (exists $pause{$$myprofile}{$target}{$id}) {
-         if ((time - $pause{$$myprofile}{$target}{$id}) < 180) {
+         if ((time - $pause{$$myprofile}{$target}{$id}) < 300) {
             return;
          }
          else {
@@ -128,15 +128,17 @@ sub on_privmsg {
 
          if ($json->{pageInfo}{totalResults} && $json->{items}[0]) {
 
-            my $comments = $json->{items}[0]{statistics}{commentCount} ? tsep($json->{items}[0]{statistics}{commentCount}) : 0;
+            #my $comments = $json->{items}[0]{statistics}{commentCount} ? tsep($json->{items}[0]{statistics}{commentCount}) : 0;
             my $dislikes = $json->{items}[0]{statistics}{dislikeCount} ? $json->{items}[0]{statistics}{dislikeCount} : 0;
             my $likes    = $json->{items}[0]{statistics}{likeCount} ? $json->{items}[0]{statistics}{likeCount} : 0;
-            my $player   = $json->{items}[0]{player}{embedHtml};
             my $playtime = $json->{items}[0]{contentDetails}{duration};
-            my $title    = encode_utf8($json->{items}[0]{snippet}{title});
+            my $title    = $json->{items}[0]{snippet}{title};
+            my $date     = $1 if ($json->{items}[0]{snippet}{publishedAt} =~ /^(\d{4}-\d\d-\d\d)T/);
             my $views    = $json->{items}[0]{statistics}{viewCount} ? tsep($json->{items}[0]{statistics}{viewCount}) : 0;
 
             return if ($title =~ m!youtube\.com/.+[?&]v=([\w-]+)! || $title =~ m!youtu\.be/([\w-]+)!);
+
+            $title =~ s/(\s|\R)+/ /gn;
 
             printf("[%s] === modules::%s: YouTube video posted [%s] on %s by %s\n", scalar localtime, __PACKAGE__, $id, $target, $nick);
 
@@ -147,7 +149,8 @@ sub on_privmsg {
 
             $views = '301+' if ($views eq '301');
 
-            main::msg($target, 'Title: %s :: Duration: %s :: Comments: %s :: Views: %s :: Rating: %s', $title, duration($length), $comments, $views, $rating) unless (exists $ignore{announce}{$$myprofile}{$target});
+            #main::msg($target, 'Title: %s :: Duration: %s :: Comments: %s :: Views: %s :: Rating: %s', $title, duration($length), $comments, $views, $rating) unless (exists $ignore{announce}{$$myprofile}{$target});
+            main::msg($target, '%s :: %s :: %s :: %s views :: rated %s', encode_utf8("\N{U+200E}".$title), duration($length), $date, $views, $rating);
 
          }
       }
