@@ -129,7 +129,7 @@ sub on_privmsg {
          if ($json->{pageInfo}{totalResults} && $json->{items}[0]) {
 
             #my $comments = $json->{items}[0]{statistics}{commentCount} ? tsep($json->{items}[0]{statistics}{commentCount}) : 0;
-            my $dislikes = $json->{items}[0]{statistics}{dislikeCount} ? $json->{items}[0]{statistics}{dislikeCount} : 0;
+            #my $dislikes = $json->{items}[0]{statistics}{dislikeCount} ? $json->{items}[0]{statistics}{dislikeCount} : 0;
             my $likes    = $json->{items}[0]{statistics}{likeCount} ? $json->{items}[0]{statistics}{likeCount} : 0;
             my $playtime = $json->{items}[0]{contentDetails}{duration};
             my $title    = $json->{items}[0]{snippet}{title};
@@ -142,7 +142,7 @@ sub on_privmsg {
 
             printf("[%s] === modules::%s: YouTube video posted [%s] on %s by %s\n", scalar localtime, __PACKAGE__, $id, $target, $nick);
 
-            my $rating = $likes+$dislikes > 0 ? sprintf('%.f%%', $likes/($likes+$dislikes)*100) : 'n/a';
+            #my $rating = $likes+$dislikes > 0 ? sprintf('%.f%%', $likes/($likes+$dislikes)*100) : '';
 
             my $length;
             $playtime =~ s/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/$length = ($1 ? $1 * 60 * 60 : 0) + ($2 ? $2 * 60 : 0) + ($3 ? $3 : 0)/eg;
@@ -150,7 +150,7 @@ sub on_privmsg {
             $views = '301+' if ($views eq '301');
 
             #main::msg($target, 'Title: %s :: Duration: %s :: Comments: %s :: Views: %s :: Rating: %s', $title, duration($length), $comments, $views, $rating) unless (exists $ignore{announce}{$$myprofile}{$target});
-            main::msg($target, '%s :: %s :: %s :: %s views :: rated %s', encode_utf8("\N{U+200E}".$title), duration($length), $date, $views, $rating);
+            main::msg($target, '%s :: %s :: %s :: %s views%s', encode_utf8("\N{U+200E}".$title), duration($length), $date, $views, $likes ? sprintf(' :: likes: %s', $likes) : '');
 
          }
       }
