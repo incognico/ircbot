@@ -130,7 +130,7 @@ sub on_privmsg {
 
             #my $comments = $json->{items}[0]{statistics}{commentCount} ? tsep($json->{items}[0]{statistics}{commentCount}) : 0;
             #my $dislikes = $json->{items}[0]{statistics}{dislikeCount} ? $json->{items}[0]{statistics}{dislikeCount} : 0;
-            my $likes    = $json->{items}[0]{statistics}{likeCount} ? $json->{items}[0]{statistics}{likeCount} : 0;
+            my $likes    = $json->{items}[0]{statistics}{likeCount} ? tsep($json->{items}[0]{statistics}{likeCount}) : 0;
             my $playtime = $json->{items}[0]{contentDetails}{duration};
             my $title    = $json->{items}[0]{snippet}{title};
             my $date     = $1 if ($json->{items}[0]{snippet}{publishedAt} =~ /^(\d{4}-\d\d-\d\d)T/);
