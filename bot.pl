@@ -192,7 +192,8 @@ threads->create(\&ircgate)->detach();
 
 ### main loop
 
-while (my @raw = split(' ', <$socket>)) {
+while (defined(my $line = <$socket>)) {
+   my @raw = split(' ', $line);
    local $/ = "\r\n";
 
    chomp(@raw);
@@ -607,7 +608,8 @@ sub ischan {
 
 sub msg {
    my $target = shift;
-   my $msg    = sprintf(shift, @_);
+   my $fmt    = shift;
+   my $msg    = @_ ? sprintf($fmt, @_) : $fmt;
 
    for (split(/\n|(.{$splitlen})/, $msg)) {
       raw('PRIVMSG %s :%s', $target, $_) if (defined $_);
@@ -616,7 +618,8 @@ sub msg {
 
 sub ntc {
    my $target = shift;
-   my $ntc    = sprintf(shift, @_);
+   my $fmt    = shift;
+   my $ntc    = @_ ? sprintf($fmt, @_) : $fmt;
 
    for (split(/\n|(.{$splitlen})/, $ntc)) {
       raw('NOTICE %s :%s', $target, $_) if (defined $_);
